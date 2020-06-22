@@ -877,7 +877,8 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
 
     elif this_argument['type'] == "SETTINGS":
         vals_entry_element.text = "See "
-        settings_link = etree.Element('xref', href="#./settings")
+        settings_link = etree.Element(
+            'xref', href=f"#./{this_argument['name']}")
         settings_link.tail = "."
         vals_entry_element.append(settings_link)
     elif this_argument['type'] == "DELIMITER":
@@ -1264,7 +1265,7 @@ def write_command_ditamap(command_list, path, map_filename, map_title):
 
     for command in sorted(command_list):
         keydef_element = etree.Element(
-            'keydef', keys=f"command_{command}", href=f"commands/{command[0]}/r_command_{command}.dita")
+            'topicref', keys=f"command_{command}", href=f"commands/{command[0]}/r_command_{command}.dita")
         command_map.append(keydef_element)
 
     filename = path / map_filename

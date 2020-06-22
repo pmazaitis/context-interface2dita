@@ -8,6 +8,7 @@ from collections import OrderedDict
 import datetime
 import pprint
 import random
+from distutils.dir_util import copy_tree
 
 
 import logging
@@ -1093,8 +1094,6 @@ def make_output_dirs(base_path, lang):
         lp = base_path / language
         lp.mkdir(exist_ok=True)
 
-    # we're just dealing with English today
-
     focus_path = base_path / lang
 
     topic_areas = ["commands", "frontmatter", "glossary",
@@ -1109,6 +1108,10 @@ def make_output_dirs(base_path, lang):
         command_area.mkdir(exist_ok=True)
 
     return focus_path
+
+
+def import_manually_edited_topics(met_path, build_path):
+    copy_tree(str(met_path), str(build_path), update=1)
 
 
 def write_command_topic(topic_element, name, path):
@@ -1221,7 +1224,15 @@ if __name__ == "__main__":
 
         logger.debug("### Starting run of all commands!")
 
+        # Setting up paths
+
+        build_path = Path.cwd() / 'build'
+        build_path.mkdir(exist_ok=True, parents=True)
         dita_path = Path.cwd() / 'build' / 'dita'
+        dita_path.mkdir(exist_ok=True, parents=True)
+
+        manual_topics_path = Path.cwd() / 'manually_edited_topics'
+
         focus_path = make_output_dirs(dita_path, args['lang'])
 
         # Keep track of what commands we see for the maps
@@ -1265,6 +1276,8 @@ if __name__ == "__main__":
                               "user_commands.xml", "User Commands")
         write_command_ditamap(system_topics_list, focus_path,
                               "system_commands.xml", "System Commands")
+
+        import_manually_edited_topics(manual_topics_path, build_path)
 
     elif args['name']:
         # show individual dita

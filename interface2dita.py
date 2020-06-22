@@ -440,6 +440,8 @@ def process_interface_tree(ft):
                 add_command_to_dict(
                     commands_dict, command_name, command_stanza)
 
+        ignored_stems_for_related = ['startstop']
+
         if command_type == "environment":
             # Generate start and stop commands
             add_command_to_dict(commands_dict, command_name,
@@ -447,7 +449,8 @@ def process_interface_tree(ft):
             add_command_to_dict(commands_dict, command_name,
                                 command_stanza, is_end=True, end_string="stop")
             # We keep track of appropriate commands to add to the generated reltable here
-            env_related_dict[command_name] = []
+            if command_name not in ignored_stems_for_related:
+                env_related_dict[command_name] = []
 
     print("## Generating related commands")
     # Run back through the dict of commands stems, and add to the child list any
@@ -1242,6 +1245,10 @@ if __name__ == "__main__":
 
     commands_dict, variants_dict, related_dict = process_interface_tree(
         full_tree)
+
+    print("## reltable Data Structure")
+    pp = pprint.PrettyPrinter(indent=2)
+    pp.pprint(related_dict)
 
     if args['all']:
 

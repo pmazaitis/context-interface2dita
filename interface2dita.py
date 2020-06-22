@@ -1194,6 +1194,65 @@ def write_inheritance_ditamap(donor_set, path):
         f.write(output)
 
 
+def write_related_ditamap(related_dict, path):
+    inheritance_map = etree.Element('map')
+    attr = inheritance_map.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    title_element = etree.Element('title')
+    title_element.text = "Command Inheritance"
+
+    inheritance_map.append(etree.Comment(
+        "Reltable for related commands: each row with as many cells needed for all of the related commands to that particular command."))
+
+    reltable_element = etree.Element('reltable')
+
+    reltable_header_row_string = """<relheader>
+      <relcolspec type="reference"><!--Command--></relcolspec>
+      <relcolspec type="reference"><!--Related--></relcolspec>
+    </relheader>"""
+
+    reltable_element.append(etree.fromstring(reltable_header_row_string))
+
+    for command_list in related_dict.values():
+        for command in command_list:
+            sibling_list = command_list.copy()
+            sibling_list.remove(command)
+            #print(command, sibling_list)
+            relrow_element = etree.Element('relrow')
+            single_relcell_element = etree.Element('relcell')
+            topicref_element = etree.Element(
+                'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
+            single_relcell_element.append(topicref_element)
+            relrow_element.append(single_relcell_element)
+            multiple_relcell_element = etree.Element('relcell')
+            for command in sibling_list:
+                topicref_element = etree.Element(
+                    'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
+                multiple_relcell_element.append(topicref_element)
+            relrow_element.append(multiple_relcell_element)
+            reltable_element.append(relrow_element)
+
+    inheritance_map.append(reltable_element)
+
+    filename = path / "relations.ditamap"
+
+    output_bytes = etree.tostring(inheritance_map,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
 def write_command_ditamap(command_list, path, map_filename, map_title):
     command_map = etree.Element('map')
     attr = command_map.attrib
@@ -1246,9 +1305,10 @@ if __name__ == "__main__":
     commands_dict, variants_dict, related_dict = process_interface_tree(
         full_tree)
 
-    print("## reltable Data Structure")
-    pp = pprint.PrettyPrinter(indent=2)
-    pp.pprint(related_dict)
+    # TODO remove after debugging
+    # print("## reltable Data Structure")
+    # pp = pprint.PrettyPrinter(indent=2)
+    # pp.pprint(related_dict)
 
     if args['all']:
 
@@ -1290,6 +1350,8 @@ if __name__ == "__main__":
             write_command_topic(xml_topic, command_name, focus_path)
 
         write_inheritance_ditamap(donor_set, focus_path)
+
+        write_related_ditamap(related_dict, focus_path)
 
         # Ditamap files for DITA processors
         write_command_ditamap(full_topics_list, focus_path,

@@ -1082,7 +1082,7 @@ def generate_dita_topic(topic_data):
 
 # --- Dealing With Output
 
-def make_output_dirs(base_path):
+def make_output_dirs(base_path, lang):
 
     # Setup areas for common and translation
     common_path = base_path / 'common'
@@ -1095,7 +1095,7 @@ def make_output_dirs(base_path):
 
     # we're just dealing with English today
 
-    focus_path = base_path / "en"
+    focus_path = base_path / lang
 
     topic_areas = ["commands", "frontmatter", "glossary",
                    "out", "placeholders", "support", "temp", ]
@@ -1202,6 +1202,7 @@ def write_command_ditamap(command_list, path, map_filename, map_title):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Client settings")
     parser.add_argument("--input", type=str, default="context-en.xml")
+    parser.add_argument("--lang", type=str, default="en")
     parser.add_argument("--name", type=str)
     parser.add_argument("--all", action="store_true")
     args = vars(parser.parse_args())
@@ -1220,8 +1221,8 @@ if __name__ == "__main__":
 
         logger.debug("### Starting run of all commands!")
 
-        base_path = Path.cwd() / 'dita'
-        focus_path = make_output_dirs(base_path)
+        dita_path = Path.cwd() / 'build' / 'dita'
+        focus_path = make_output_dirs(dita_path, args['lang'])
 
         # Keep track of what commands we see for the maps
         full_topics_list = []

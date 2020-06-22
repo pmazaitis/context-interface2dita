@@ -349,10 +349,14 @@ def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False,
         this_dict[command_name]['arguments'] = []
 
 
-def generate_env_related_dict(env_related_dict, command_dict):
+def generate_env_related_dict(env_related_dict, commands_dict):
 
-    for key in env_related_dict:
-        print(f"Found env stem: {key}")
+    prefixes = ['start', 'stop', 'setup', 'define']
+
+    for stem in env_related_dict:
+        for pre in prefixes:
+            if pre + stem in commands_dict:
+                env_related_dict[stem].append(pre + stem)
 
     return env_related_dict
 
@@ -415,7 +419,7 @@ def process_interface_tree(ft):
         if variant_type:
             # Handle variants, and instances of variants
 
-            # what the heck is happeing with setuppapersize
+            # what the heck is happening with setuppapersize
             if command_name == "setuppapersize":
                 add_command_to_dict(commands_dict, command_name,
                                     command_stanza)
@@ -446,7 +450,7 @@ def process_interface_tree(ft):
             env_related_dict[command_name] = []
 
     print("## Generating related commands")
-    # Run back trough the list of commands, and add to the list any
+    # Run back through the dict of commands stems, and add to the child list any
     # command that has the environment as a stem of common forms
 
     env_related_dict = generate_env_related_dict(
@@ -1264,7 +1268,7 @@ if __name__ == "__main__":
         # Setup output area
 
         for num, (command_name, command_data) in enumerate(commands_dict.items()):
-            print(f"{num:04}: Processing {command_data['name']}...")
+            logger.info(f"{num:04}: Processing {command_data['name']}...")
 
             command_data = commands_dict[command_name]
 

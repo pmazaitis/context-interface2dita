@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="c_parts_of_a_command" xml:lang="en">
+    <title>The Parts of a Command</title>
+    <shortdesc>Each <ph
+        conkeyref="definitions/product_name"/> command must have a name, and may also take setups (either as keywords,
+        keyval pairs, or sets of each) and can have a scope.</shortdesc>
+    <conbody>
+        <p></p>
+    </conbody>
+</concept>

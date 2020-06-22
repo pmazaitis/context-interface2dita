@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="r_placeholder_PLURAL">
+    <title>PLURAL</title>
+    <shortdesc><ph id="placeholder_desc">The <term>PLURAL</term> is a kind of thing.</ph> <ph id="placeholder_value">Use values for <term>PLURAL</term> that...</ph></shortdesc>
+    <refbody>
+        <section>
+            <p>Examples and other supporting information for transclusion.</p>
+        </section>
+    </refbody>
+</reference>

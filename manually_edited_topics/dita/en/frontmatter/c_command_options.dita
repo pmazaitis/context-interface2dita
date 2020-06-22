@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="c-command_options" xml:lang="en">
+    <title>Command Options</title>
+    <shortdesc>Options are single keywords. Commands that accept options use an <term>options
+            block</term>, delimited by square brackets, which comes after the command. The options
+        block can accept one or more options, separated by a comma.</shortdesc>
+    <conbody>
+        <example>
+            <p>Commands that accept options can have an options block with just a single option.</p>
+            <codeblock>
+\command_name[option]
+            </codeblock>
+        </example>
+        <example>
+            <p>Commands that accept options can have an options block with multiple options separated
+                by a comma.</p>
+            <codeblock>
+\command_name[option, option, option]
+            </codeblock>
+        </example>
+    </conbody>
+</concept>

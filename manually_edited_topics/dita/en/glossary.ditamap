@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en">
+    <title>Glossary</title>
+    
+    <!-- Glossary link references we want to use in the manual -->
+    
+    <glossref keys="skip" href="glossary/g_skip.dita"></glossref>
+    
+    <!-- Entries we want to include in the product -->
+    
+    <topichead navtitle="Glossary">
+        <topicref href="glossary/g_skip.dita"/>
+    </topichead>
+</map>

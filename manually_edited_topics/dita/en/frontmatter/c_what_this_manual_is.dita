@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="what_this_manual_is" xml:lang="en">
+    <title>What This Manual Is</title>
+    <shortdesc>This manual presents a comprehensive and complete reference to the commmands in the <ph
+        conkeyref="definitions/product_name"/> typesetting system, available setups, and example use. This manual does not intend to serve as a tutorial or other instructional material.</shortdesc>
+    <conbody>
+        <p>This manual presents, for each command in the <ph
+            conkeyref="definitions/product_name"/> typesetting system:</p>
+        <ul>
+            <li>The name of the command.</li>
+            <li>Release status.</li>
+            <li>The syntax of the command.</li>
+            <li>Options available for the command (if applicable).</li>
+            <li>Settings available for the command (if applicable).</li>
+            <li>Inheritence of options and settings.</li>
+            <li>Notes on the command.</li>
+            <li>A minimal working example of the command in use.</li>
+            <li>Extended examples of the command in use (optional).</li>
+            <li>Rendered output of the example (if applicable).</li>
+            <li>Related commands.</li>
+            <li>Link to the source file where the command is defined.</li>
+        </ul>
+    </conbody>
+</concept>

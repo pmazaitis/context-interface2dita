@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="c_font_switching" xml:lang="en">
+    <title>Font Switching</title>
+    <shortdesc>One way we can manipulate fonts choices in <ph keyref="definitions/product_name"/>  is with <term>Font Switches</term>. Font Switches change all following text in the text stream until an overriding font switch, or the end of a scope.</shortdesc>
+    <conbody>
+        <p></p>
+    </conbody>
+</concept>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="c_command_scope" xml:lang="en">
+    <title>Command Scope</title>
+    <shortdesc>A command may have a <term>scope</term> as an argument. A comman's scope is delimited
+        by curly braces ({ and }) after the command.</shortdesc>
+    <conbody>
+        <example>
+            <p>Commands that accept scope use curly brackets to define that scope.</p>
+            <codeblock>
+\command_name{This is the scope of the command.}
+            </codeblock>
+        </example>
+        <section>
+            <title>Special behavior for font switching.</title>
+            <p>Font switches use a slightly different behavior in that they affect all of the text
+                in the <ph outputclass="emphasis">current</ph> scope, up to the next font
+                switch or the end of the scope.</p>
+        </section>
+    </conbody>
+</concept>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="placeholders">
+    <title>Placeholders</title>
+    <shortdesc>Placeholders in this documentation are parts of commands that can be specified by the user. Placeholders come in types; some commands require particular types of variables as input.</shortdesc>
+    <conbody>
+        <p></p>
+    </conbody>
+</concept>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="definitions" xml:lang="en">
+    <title>Definitions</title>
+    <shortdesc>A collection of definitions and other bits of text to be conref'd and conkeyref'd into other topics.</shortdesc>
+    <refbody> 
+        <section>
+            <title>Phrases for Proper Names</title>
+            <p><ph id="product_name">ConTeXt</ph></p>
+            <p><ph id="suite_name">ConTeXt Suite</ph></p>
+        </section>
+        <section>
+            <title>Syntax Descriptions</title>
+            <p id="options_description">Keywords, separated by a comma.</p>
+            <p id="settings_description">Key/value pairs of settings, separated by a comma.</p>
+        </section>
+        <section>
+            <title>URLs</title>
+            <ph id="baseurl_source">https://source.contextgarden.net/tex/context/base/mkiv/</ph>
+        </section>
+    </refbody>
+</reference>

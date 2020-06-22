@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+
+<map  xml:lang="en">
+    <title><ph conkeyref="definitions/product_name"/> User Command Reference.</title>
+    <keydef keys="definitions" href="support/definitions.dita"/>
+    <topichead navtitle="About This Manual">
+        <topicref href="frontmatter/c_what_this_manual_is.dita"/>
+        <topicref href="frontmatter/c_what_this_manual_is_not.dita"/>
+    </topichead>
+    <topichead navtitle="About The Commands">
+        <topicref href="frontmatter/c_parts_of_a_command.dita">
+            <topicref href="frontmatter/c_the_command_name.dita"/>
+            <topicref href="frontmatter/c_command_setups.dita">
+                <topicref href="frontmatter/c_command_options.dita"/>
+                <topicref href="frontmatter/c_command_settings.dita"/>
+            </topicref>
+            <topicref href="frontmatter/c_command_scope.dita"/>
+        </topicref>
+        <topicref href="frontmatter/c_command_special_cases.dita">
+            <topicref href="frontmatter/c_font_switching.dita"/>
+        </topicref>
+        <topicref href="frontmatter/c_extending_commands.dita">
+            <topicref href="frontmatter/c_example_of_extending_a_command.dita"/>
+            <topicref href="frontmatter/c_extendable_commands.dita"/>
+        </topicref>
+    </topichead>
+    <mapref href="user_commands.ditamap" format="ditamap"/>
+    <topichead navtitle="Appendices">
+        <mapref href="placeholders.ditamap" format="ditamap"/>
+        <mapref href="glossary.ditamap" format="ditamap"/>
+    </topichead>
+    
+    <mapref href="relations.ditamap" format="ditamap"/>
+    <topicref href="inheritance.ditamap" format="ditamap"/>
+</map>

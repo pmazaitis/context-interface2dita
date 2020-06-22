@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="extending_commands" xml:lang="en">
+    <title>Extending Commands</title>
+    <shortdesc>Some <ph keyref="definitions/product_name"/> commands can be used to create new commands. New commands inhierit the setups of the original command, but can be further customized.
+    </shortdesc>
+    <conbody>
+        <p>
+
+        </p>
+    </conbody>
+</concept>

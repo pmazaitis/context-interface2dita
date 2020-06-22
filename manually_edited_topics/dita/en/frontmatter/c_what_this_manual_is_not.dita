@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="what_this_manual_is_not" xml:lang="en">
+    <title>What This Manual Is Not</title>
+    <shortdesc>This manual is not a tutorial, and is not a recommended way to learn the ConTeXt
+        typesetting system.</shortdesc>
+    <conbody>
+        <p>Materials for learning <ph conkeyref="definitions/product_name"/> are avaiable through the <xref href="http://www.contextgarden.net" scope="external" format="html">project website</xref>.</p>
+        <p>The <ph conkeyref="definitions/product_name"/> Project offers several manuals to help new users get started.</p>
+        <ul>
+            <li>
+                <xref href="http://www.pragma-ade.nl/general/manuals/ma-cb-en.pdf" scope="external" format="pdf"><ph conkeyref="definitions/product_name"/>, an Excurion</xref> is a beginner's manual for the typesetting system.
+            </li>
+            <li>
+                <xref href="http://pmrb.free.fr/contextref.pdf" scope="external" format="pdf">The <ph conkeyref="definitions/product_name"/> Reference Manual</xref> provides coverage for all aspects of the typesetting system.
+            </li>
+        </ul>
+        <p><ph conkeyref="definitions/product_name"/> also ships with many <xref href="https://wiki.contextgarden.net/Manuals" scope="external" format="html">manuals that detail individual parts of the system</xref>.</p>
+    </conbody>
+    <related-links>
+        <link href="http://www.contextgarden.net" scope="external" format="html"/>
+        <link href="http://www.pragma-ade.nl/general/manuals/ma-cb-en.pdf" scope="external" format="pdf"/> 
+        <link href="http://pmrb.free.fr/contextref.pdf" scope="external" format="pdf"/>
+        <link href="https://wiki.contextgarden.net/Manuals" scope="external" format="html"/>
+    </related-links>
+</concept>

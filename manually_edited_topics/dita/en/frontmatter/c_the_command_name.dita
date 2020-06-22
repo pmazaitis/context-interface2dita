@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="c_the_command_name" xml:lang="en">
+    <title>The Command Name</title>
+    <shortdesc>A <ph conkeyref="definitions/product_name"/> command is formed by a backslash (\) and
+        a series of letters.</shortdesc>
+    <conbody>
+        <!--Use hazardstatement element for the warning below, instead? Is that too much?-->
+        <p>A <ph conkeyref="definitions/product_name"/> command name cannot include numbers.</p>
+        <note><p><ph conkeyref="definitions/product_name"/> allows users to define commands.</p>
+            <p>A good practice for naming user-defined commands is to use title case (TitleCase) to
+                ensure that new command names do not conflict with command names that are already
+                defined by <ph conkeyref="definitions/product_name"/>.</p></note>
+
+    </conbody>
+</concept>

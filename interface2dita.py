@@ -349,6 +349,18 @@ def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False,
         this_dict[command_name]['arguments'] = []
 
 
+def generate_env_related_dict(env_related_dict, commands_dict):
+
+    prefixes = ['start', 'stop', 'setup', 'define']
+
+    for stem in env_related_dict:
+        for pre in prefixes:
+            if pre + stem in commands_dict:
+                env_related_dict[stem].append(pre + stem)
+
+    return env_related_dict
+
+
 def process_interface_tree(ft):
     """Use the complete interface XML file to prepare dictionaries of commands:
     one of commands (style, document, and system) and one of variants.
@@ -358,6 +370,7 @@ def process_interface_tree(ft):
 
     commands_dict = {}
     variants_dict = {}
+    env_related_dict = {}
 
     interface_commands = list_of_commands(ft, NSMAP)
 
@@ -406,7 +419,7 @@ def process_interface_tree(ft):
         if variant_type:
             # Handle variants, and instances of variants
 
-            # what the heck is happeing with setuppapersize
+            # what the heck is happening with setuppapersize
             if command_name == "setuppapersize":
                 add_command_to_dict(commands_dict, command_name,
                                     command_stanza)
@@ -427,14 +440,26 @@ def process_interface_tree(ft):
                 add_command_to_dict(
                     commands_dict, command_name, command_stanza)
 
+        ignored_stems_for_related = ['startstop']
+
         if command_type == "environment":
             # Generate start and stop commands
             add_command_to_dict(commands_dict, command_name,
                                 command_stanza, is_begin=True, begin_string="start")
             add_command_to_dict(commands_dict, command_name,
                                 command_stanza, is_end=True, end_string="stop")
+            # We keep track of appropriate commands to add to the generated reltable here
+            if command_name not in ignored_stems_for_related:
+                env_related_dict[command_name] = []
 
-    return commands_dict, variants_dict
+    print("## Generating related commands")
+    # Run back through the dict of commands stems, and add to the child list any
+    # command that has the environment as a stem of common forms
+
+    env_related_dict = generate_env_related_dict(
+        env_related_dict, commands_dict)
+
+    return commands_dict, variants_dict, env_related_dict
 
 # --- Topic Building Functions ---
 
@@ -1169,6 +1194,65 @@ def write_inheritance_ditamap(donor_set, path):
         f.write(output)
 
 
+def write_related_ditamap(related_dict, path):
+    inheritance_map = etree.Element('map')
+    attr = inheritance_map.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    title_element = etree.Element('title')
+    title_element.text = "Command Inheritance"
+
+    inheritance_map.append(etree.Comment(
+        "Reltable for related commands: each row with as many cells needed for all of the related commands to that particular command."))
+
+    reltable_element = etree.Element('reltable')
+
+    reltable_header_row_string = """<relheader>
+      <relcolspec type="reference"><!--Command--></relcolspec>
+      <relcolspec type="reference"><!--Related--></relcolspec>
+    </relheader>"""
+
+    reltable_element.append(etree.fromstring(reltable_header_row_string))
+
+    for command_list in related_dict.values():
+        for command in command_list:
+            sibling_list = command_list.copy()
+            sibling_list.remove(command)
+            #print(command, sibling_list)
+            relrow_element = etree.Element('relrow')
+            single_relcell_element = etree.Element('relcell')
+            topicref_element = etree.Element(
+                'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
+            single_relcell_element.append(topicref_element)
+            relrow_element.append(single_relcell_element)
+            multiple_relcell_element = etree.Element('relcell')
+            for command in sibling_list:
+                topicref_element = etree.Element(
+                    'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
+                multiple_relcell_element.append(topicref_element)
+            relrow_element.append(multiple_relcell_element)
+            reltable_element.append(relrow_element)
+
+    inheritance_map.append(reltable_element)
+
+    filename = path / "relations.ditamap"
+
+    output_bytes = etree.tostring(inheritance_map,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
 def write_command_ditamap(command_list, path, map_filename, map_title):
     command_map = etree.Element('map')
     attr = command_map.attrib
@@ -1218,7 +1302,13 @@ if __name__ == "__main__":
 
     # Process tree into dict of commands and variants
 
-    commands_dict, variants_dict = process_interface_tree(full_tree)
+    commands_dict, variants_dict, related_dict = process_interface_tree(
+        full_tree)
+
+    # TODO remove after debugging
+    # print("## reltable Data Structure")
+    # pp = pprint.PrettyPrinter(indent=2)
+    # pp.pprint(related_dict)
 
     if args['all']:
 
@@ -1245,7 +1335,7 @@ if __name__ == "__main__":
         # Setup output area
 
         for num, (command_name, command_data) in enumerate(commands_dict.items()):
-            print(f"{num:04}: Processing {command_data['name']}...")
+            logger.info(f"{num:04}: Processing {command_data['name']}...")
 
             command_data = commands_dict[command_name]
 
@@ -1260,6 +1350,8 @@ if __name__ == "__main__":
             write_command_topic(xml_topic, command_name, focus_path)
 
         write_inheritance_ditamap(donor_set, focus_path)
+
+        write_related_ditamap(related_dict, focus_path)
 
         # Ditamap files for DITA processors
         write_command_ditamap(full_topics_list, focus_path,

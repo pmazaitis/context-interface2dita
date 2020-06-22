@@ -8,6 +8,7 @@ from collections import OrderedDict
 import datetime
 import pprint
 import random
+from distutils.dir_util import copy_tree
 
 
 import logging
@@ -1082,7 +1083,7 @@ def generate_dita_topic(topic_data):
 
 # --- Dealing With Output
 
-def make_output_dirs(base_path):
+def make_output_dirs(base_path, lang):
 
     # Setup areas for common and translation
     common_path = base_path / 'common'
@@ -1093,9 +1094,7 @@ def make_output_dirs(base_path):
         lp = base_path / language
         lp.mkdir(exist_ok=True)
 
-    # we're just dealing with English today
-
-    focus_path = base_path / "en"
+    focus_path = base_path / lang
 
     topic_areas = ["commands", "frontmatter", "glossary",
                    "out", "placeholders", "support", "temp", ]
@@ -1109,6 +1108,10 @@ def make_output_dirs(base_path):
         command_area.mkdir(exist_ok=True)
 
     return focus_path
+
+
+def import_manually_edited_topics(met_path, build_path):
+    copy_tree(str(met_path), str(build_path), update=1)
 
 
 def write_command_topic(topic_element, name, path):
@@ -1202,6 +1205,7 @@ def write_command_ditamap(command_list, path, map_filename, map_title):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Client settings")
     parser.add_argument("--input", type=str, default="context-en.xml")
+    parser.add_argument("--lang", type=str, default="en")
     parser.add_argument("--name", type=str)
     parser.add_argument("--all", action="store_true")
     args = vars(parser.parse_args())
@@ -1220,8 +1224,16 @@ if __name__ == "__main__":
 
         logger.debug("### Starting run of all commands!")
 
-        base_path = Path.cwd() / 'dita'
-        focus_path = make_output_dirs(base_path)
+        # Setting up paths
+
+        build_path = Path.cwd() / 'build'
+        build_path.mkdir(exist_ok=True, parents=True)
+        dita_path = Path.cwd() / 'build' / 'dita'
+        dita_path.mkdir(exist_ok=True, parents=True)
+
+        manual_topics_path = Path.cwd() / 'manually_edited_topics'
+
+        focus_path = make_output_dirs(dita_path, args['lang'])
 
         # Keep track of what commands we see for the maps
         full_topics_list = []
@@ -1264,6 +1276,8 @@ if __name__ == "__main__":
                               "user_commands.xml", "User Commands")
         write_command_ditamap(system_topics_list, focus_path,
                               "system_commands.xml", "System Commands")
+
+        import_manually_edited_topics(manual_topics_path, build_path)
 
     elif args['name']:
         # show individual dita

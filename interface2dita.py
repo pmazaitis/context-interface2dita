@@ -349,6 +349,14 @@ def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False,
         this_dict[command_name]['arguments'] = []
 
 
+def generate_env_related_dict(env_related_dict, command_dict):
+
+    for key in env_related_dict:
+        print(f"Found env stem: {key}")
+
+    return env_related_dict
+
+
 def process_interface_tree(ft):
     """Use the complete interface XML file to prepare dictionaries of commands:
     one of commands (style, document, and system) and one of variants.
@@ -358,6 +366,7 @@ def process_interface_tree(ft):
 
     commands_dict = {}
     variants_dict = {}
+    env_related_dict = {}
 
     interface_commands = list_of_commands(ft, NSMAP)
 
@@ -433,8 +442,17 @@ def process_interface_tree(ft):
                                 command_stanza, is_begin=True, begin_string="start")
             add_command_to_dict(commands_dict, command_name,
                                 command_stanza, is_end=True, end_string="stop")
+            # We keep track of appropriate commands to add to the generated reltable here
+            env_related_dict[command_name] = []
 
-    return commands_dict, variants_dict
+    print("## Generating related commands")
+    # Run back trough the list of commands, and add to the list any
+    # command that has the environment as a stem of common forms
+
+    env_related_dict = generate_env_related_dict(
+        env_related_dict, commands_dict)
+
+    return commands_dict, variants_dict, env_related_dict
 
 # --- Topic Building Functions ---
 
@@ -1218,7 +1236,8 @@ if __name__ == "__main__":
 
     # Process tree into dict of commands and variants
 
-    commands_dict, variants_dict = process_interface_tree(full_tree)
+    commands_dict, variants_dict, related_dict = process_interface_tree(
+        full_tree)
 
     if args['all']:
 

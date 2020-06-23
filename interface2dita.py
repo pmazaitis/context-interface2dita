@@ -931,18 +931,6 @@ def add_topic_refbody_refsyn_synph_var(this_argument):
     if this_argument['type'] == 'DELIMITER':
         var_element.text = "\\" + this_argument['name']
         return var_element
-    elif this_argument['type'] == 'OPTIONS':
-        var_element.text = this_argument['type']
-        xref_element = etree.Element(
-            'xref', href=f"#./short_{this_argument['name']}")
-        xref_element.append(var_element)
-        return xref_element
-    elif this_argument['type'] == 'SETTINGS':
-        var_element.text = this_argument['type']
-        xref_element = etree.Element(
-            'xref', href=f"#./short_{this_argument['name']}")
-        xref_element.append(var_element)
-        return xref_element
     else:
         var_element.text = this_argument['type']
         return var_element

@@ -452,7 +452,6 @@ def process_interface_tree(ft):
             if command_name not in ignored_stems_for_related:
                 env_related_dict[command_name] = []
 
-    print("## Generating related commands")
     # Run back through the dict of commands stems, and add to the child list any
     # command that has the environment as a stem of common forms
 
@@ -871,16 +870,16 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
         else:
             current_element.text = current_element.text[:-2]
 
-        # Add link to section
-        xref_element = etree.Element(
-            'xref', href=f"#./{this_argument['name']}")
-        xref_element.text = " (See options table for details.)"
-        current_element.append(xref_element)
-
         row_element.set('id', f'short_{this_argument["name"]}')
 
         if vals_entry_element != current_element:
             vals_entry_element.append(current_element)
+
+        # Add link to section
+        xref_element = etree.Element(
+            'xref', href=f"#./{this_argument['name']}")
+        xref_element.text = " (See options table for details.)"
+        vals_entry_element.append(xref_element)
 
     elif this_argument['type'] == "SETTINGS":
         xref_element = etree.Element(

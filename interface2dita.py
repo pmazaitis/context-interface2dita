@@ -542,20 +542,53 @@ def add_topic_refbody_settings(argument_data):
             table_group_element.append(etree.Element(
                 'colspec', colname="value_desc", colnum="2", colwidth="1*"))
 
-            table_head_element_string = f"""<thead>
-            <row>
-              <entry namest="value_name" nameend="value_desc">{c['name']}</entry>
-            </row>
-            <row>
+        #     table_head_element_string = f"""<thead>
+        #     <row>
+        #       <entry namest="value_name" nameend="value_desc">{c['name']}</entry>
+        #     </row>
+        #     <row>
+        #       <entry>Value</entry>
+        #       <entry>Description</entry>
+        #     </row>
+        #   </thead>"""
+
+        #     table_group_element.append(
+        #         etree.fromstring(table_head_element_string))
+
+            table_head_element = etree.Element('thead')
+
+            table_head_first_row_element = etree.Element('row')
+
+            for k in c['keys']:
+                if k['type'] == "inherit":
+                    table_head_title_entry = etree.Element(
+                        'entry', namest="value_name", nameend="value_desc")
+                    table_head_title_entry.text = "(Inherits from "
+                    xref_element = etree.Element(
+                        'xref', href=f"../{k['donor'][0]}/r_command_{k['donor']}.dita")
+                    xref_element.tail = ")"
+                    table_head_title_entry.append(xref_element)
+                    break
+            else:
+                table_head_title_entry = etree.Element(
+                    'entry', namest="value_name", nameend="value_desc")
+                table_head_title_entry.text = c['name']
+
+            table_head_first_row_element.append(table_head_title_entry)
+
+            table_head_element.append(table_head_first_row_element)
+
+            table_head_second_row_string = """<row>
               <entry>Value</entry>
               <entry>Description</entry>
-            </row>
-          </thead>
+            </row>"""
 
-                """
+            table_head_second_row_element = etree.fromstring(
+                table_head_second_row_string)
 
-            table_group_element.append(
-                etree.fromstring(table_head_element_string))
+            table_head_element.append(table_head_second_row_element)
+
+            table_group_element.append(table_head_element)
 
             table_body_element = etree.Element('tbody')
 

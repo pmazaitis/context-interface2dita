@@ -930,10 +930,16 @@ def add_topic_refbody_refsyn_synph_var(this_argument):
 
     if this_argument['type'] == 'DELIMITER':
         var_element.text = "\\" + this_argument['name']
-        return var_element
+    elif this_argument['type'] == 'OPTIONS':
+        var_element.set('id', f"synvar_{this_argument['name']}")
+        var_element.text = this_argument['type']
+    elif this_argument['type'] == 'SETTINGS':
+        var_element.set('id', f"synvar_{this_argument['name']}")
+        var_element.text = this_argument['type']
     else:
         var_element.text = this_argument['type']
-        return var_element
+
+    return var_element
 
 
 def add_delimiter(type, chirality="left"):

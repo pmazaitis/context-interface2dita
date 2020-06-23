@@ -452,7 +452,6 @@ def process_interface_tree(ft):
             if command_name not in ignored_stems_for_related:
                 env_related_dict[command_name] = []
 
-    print("## Generating related commands")
     # Run back through the dict of commands stems, and add to the child list any
     # command that has the environment as a stem of common forms
 
@@ -865,6 +864,7 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
                 else:
                     current_element.text += f"{c['text']}, "
 
+        # Get rid of trailing comma
         if in_tail:
             current_element.tail = current_element.tail[:-2]
         else:
@@ -875,14 +875,21 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
         if vals_entry_element != current_element:
             vals_entry_element.append(current_element)
 
-    elif this_argument['type'] == "SETTINGS":
-        vals_entry_element.text = "See "
-        settings_link = etree.Element(
+        # Add link to section
+        xref_element = etree.Element(
             'xref', href=f"#./{this_argument['name']}")
-        settings_link.tail = "."
-        vals_entry_element.append(settings_link)
+        xref_element.text = " (See options table for details.)"
+        vals_entry_element.append(xref_element)
+
+    elif this_argument['type'] == "SETTINGS":
+        xref_element = etree.Element(
+            'xref', href=f"#./{this_argument['name']}")
+        xref_element.text = " (See settings table for details.)"
+        vals_entry_element.append(xref_element)
+
     elif this_argument['type'] == "DELIMITER":
         vals_entry_element.text = "\\" + this_argument['name']
+
     else:
         placeholder_vals_element = etree.Element(
             'ph', conkeyref=f"{this_argument['type']}/placeholder_value")
@@ -923,6 +930,12 @@ def add_topic_refbody_refsyn_synph_var(this_argument):
 
     if this_argument['type'] == 'DELIMITER':
         var_element.text = "\\" + this_argument['name']
+    elif this_argument['type'] == 'OPTIONS':
+        var_element.set('id', f"synvar_{this_argument['name']}")
+        var_element.text = this_argument['type']
+    elif this_argument['type'] == 'SETTINGS':
+        var_element.set('id', f"synvar_{this_argument['name']}")
+        var_element.text = this_argument['type']
     else:
         var_element.text = this_argument['type']
 
@@ -1301,7 +1314,11 @@ if __name__ == "__main__":
 
     today = datetime.date.today()
 
+    print("Starting up.")
+
     # Process tree into dict of commands and variants
+
+    print("Processing interface file.")
 
     commands_dict, variants_dict, related_dict = process_interface_tree(
         full_tree)
@@ -1312,6 +1329,8 @@ if __name__ == "__main__":
     # pp.pprint(related_dict)
 
     if args['all']:
+
+        print("Generating command topics.")
 
         logger.debug("### Starting run of all commands!")
 
@@ -1331,9 +1350,7 @@ if __name__ == "__main__":
         user_topics_list = []
         system_topics_list = []
 
-        # (We're already using the global donor_set for tracking donors)
-
-        # Setup output area
+        print("Writing topic files.")
 
         for num, (command_name, command_data) in enumerate(commands_dict.items()):
             logger.info(f"{num:04}: Processing {command_data['name']}...")
@@ -1349,6 +1366,8 @@ if __name__ == "__main__":
                 user_topics_list.append(command_data['name'])
 
             write_command_topic(xml_topic, command_name, focus_path)
+
+        print("Writing maps.")
 
         write_inheritance_ditamap(donor_set, focus_path)
 
@@ -1370,7 +1389,11 @@ if __name__ == "__main__":
         write_command_ditamap(system_topics_list, focus_path,
                               "system_commands.xml", "System Commands")
 
+        print("Importing manually edited topics.")
+
         import_manually_edited_topics(manual_topics_path, build_path)
+
+        print("Done.")
 
     elif args['name']:
         # show individual dita

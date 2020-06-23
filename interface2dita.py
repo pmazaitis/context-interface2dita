@@ -865,10 +865,17 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
                 else:
                     current_element.text += f"{c['text']}, "
 
+        # Get rid of trailing comma
         if in_tail:
             current_element.tail = current_element.tail[:-2]
         else:
             current_element.text = current_element.text[:-2]
+
+        # Add link to section
+        xref_element = etree.Element(
+            'xref', href=f"#./{this_argument['name']}")
+        xref_element.text = " (See options table for details.)"
+        current_element.append(xref_element)
 
         row_element.set('id', f'short_{this_argument["name"]}')
 
@@ -876,13 +883,14 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
             vals_entry_element.append(current_element)
 
     elif this_argument['type'] == "SETTINGS":
-        vals_entry_element.text = "See "
-        settings_link = etree.Element(
+        xref_element = etree.Element(
             'xref', href=f"#./{this_argument['name']}")
-        settings_link.tail = "."
-        vals_entry_element.append(settings_link)
+        xref_element.text = " (See settings table for details.)"
+        vals_entry_element.append(xref_element)
+
     elif this_argument['type'] == "DELIMITER":
         vals_entry_element.text = "\\" + this_argument['name']
+
     else:
         placeholder_vals_element = etree.Element(
             'ph', conkeyref=f"{this_argument['type']}/placeholder_value")

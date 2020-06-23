@@ -930,10 +930,22 @@ def add_topic_refbody_refsyn_synph_var(this_argument):
 
     if this_argument['type'] == 'DELIMITER':
         var_element.text = "\\" + this_argument['name']
+        return var_element
+    elif this_argument['type'] == 'OPTIONS':
+        var_element.text = this_argument['type']
+        xref_element = etree.Element(
+            'xref', href=f"#./short_{this_argument['name']}")
+        xref_element.append(var_element)
+        return xref_element
+    elif this_argument['type'] == 'SETTINGS':
+        var_element.text = this_argument['type']
+        xref_element = etree.Element(
+            'xref', href=f"#./short_{this_argument['name']}")
+        xref_element.append(var_element)
+        return xref_element
     else:
         var_element.text = this_argument['type']
-
-    return var_element
+        return var_element
 
 
 def add_delimiter(type, chirality="left"):
@@ -1308,7 +1320,11 @@ if __name__ == "__main__":
 
     today = datetime.date.today()
 
+    print("Starting up.")
+
     # Process tree into dict of commands and variants
+
+    print("Processing interface file.")
 
     commands_dict, variants_dict, related_dict = process_interface_tree(
         full_tree)
@@ -1319,6 +1335,8 @@ if __name__ == "__main__":
     # pp.pprint(related_dict)
 
     if args['all']:
+
+        print("Generating command topics.")
 
         logger.debug("### Starting run of all commands!")
 
@@ -1338,9 +1356,7 @@ if __name__ == "__main__":
         user_topics_list = []
         system_topics_list = []
 
-        # (We're already using the global donor_set for tracking donors)
-
-        # Setup output area
+        print("Writing topic files.")
 
         for num, (command_name, command_data) in enumerate(commands_dict.items()):
             logger.info(f"{num:04}: Processing {command_data['name']}...")
@@ -1356,6 +1372,8 @@ if __name__ == "__main__":
                 user_topics_list.append(command_data['name'])
 
             write_command_topic(xml_topic, command_name, focus_path)
+
+        print("Writing maps.")
 
         write_inheritance_ditamap(donor_set, focus_path)
 
@@ -1377,7 +1395,11 @@ if __name__ == "__main__":
         write_command_ditamap(system_topics_list, focus_path,
                               "system_commands.xml", "System Commands")
 
+        print("Importing manually edited topics.")
+
         import_manually_edited_topics(manual_topics_path, build_path)
+
+        print("Done.")
 
     elif args['name']:
         # show individual dita

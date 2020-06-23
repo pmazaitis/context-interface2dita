@@ -563,11 +563,14 @@ def add_topic_refbody_settings(argument_data):
                 if k['type'] == "inherit":
                     table_head_title_entry = etree.Element(
                         'entry', namest="value_name", nameend="value_desc")
-                    table_head_title_entry.text = "(Inherits from "
+                    table_head_title_entry.text = f"{c['name']}"
+                    ph_element = etree.Element('ph')
+                    ph_element.text = " (Inherits from "
                     xref_element = etree.Element(
                         'xref', href=f"../{k['donor'][0]}/r_command_{k['donor']}.dita")
                     xref_element.tail = ")"
-                    table_head_title_entry.append(xref_element)
+                    ph_element.append(xref_element)
+                    table_head_title_entry.append(ph_element)
                     break
             else:
                 table_head_title_entry = etree.Element(

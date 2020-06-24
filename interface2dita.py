@@ -628,7 +628,7 @@ def add_topic_refbody_settings(argument_data):
                     keyword_entry_element = etree.Element('entry')
                     keyword_entry_element.text = k['text']
                     table_row_element.append(keyword_entry_element)
-                    keyword_desc_element = etree.Element('entry')
+                    keyword_desc_element = etree.Element('entry', rev="0")
                     keyword_desc_element.text = ""
                     table_row_element.append(keyword_desc_element)
 
@@ -793,7 +793,7 @@ def add_topic_refbody_options(argument_data):
             keyword_entry_element = etree.Element('entry')
             keyword_entry_element.text = c['text']
             table_row_element.append(keyword_entry_element)
-            keyword_desc_element = etree.Element('entry')
+            keyword_desc_element = etree.Element('entry', rev="0")
             keyword_desc_element.text = ""
             table_row_element.append(keyword_desc_element)
 
@@ -802,7 +802,6 @@ def add_topic_refbody_options(argument_data):
 
         table_body_element.append(table_row_element)
 
-    # TODO do we need to salt the ids here with command names?
     if len(table_body_element.getchildren()) > 1:
         table_body_element[0].attrib['id'] = f"{argument_data['name']}_start"
         table_body_element[-1].attrib['id'] = f"{argument_data['name']}_stop"

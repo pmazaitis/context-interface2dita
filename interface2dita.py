@@ -542,19 +542,6 @@ def add_topic_refbody_settings(argument_data):
             table_group_element.append(etree.Element(
                 'colspec', colname="value_desc", colnum="2", colwidth="1*"))
 
-        #     table_head_element_string = f"""<thead>
-        #     <row>
-        #       <entry namest="value_name" nameend="value_desc">{c['name']}</entry>
-        #     </row>
-        #     <row>
-        #       <entry>Value</entry>
-        #       <entry>Description</entry>
-        #     </row>
-        #   </thead>"""
-
-        #     table_group_element.append(
-        #         etree.fromstring(table_head_element_string))
-
             table_head_element = etree.Element('thead')
 
             table_head_first_row_element = etree.Element('row')

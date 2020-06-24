@@ -288,7 +288,11 @@ def generate_command_data(
     except:
         source_filename = "UNKNOWN"
 
-    # For the moment, we want to preserve this in the data structure
+    try:
+        command_variant = command_stanza.get('variant')
+    except:
+        command_variant = ""
+
     try:
         args_tree = command_stanza.xpath('cd:arguments', namespaces=NSMAP)
     except:
@@ -300,6 +304,7 @@ def generate_command_data(
         'name': command_name,
         'is_system': command_is_system,
         'category': command_level,
+        'variant': command_variant,
         'keywords': keywords,
         'filename': source_filename,
         'args_tree': args_tree,

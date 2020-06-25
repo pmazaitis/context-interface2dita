@@ -407,10 +407,12 @@ def process_generated_environment(commands_dict, command_name, command_stanza, i
 
     add_command_to_dict(commands_dict, command_name,
                         command_stanza, instances=instances)
+    start_instances = ["start" + i for i in instances]
     add_command_to_dict(commands_dict, command_name,
-                        command_stanza, instance_donor=command_name, instance_of=command_name, is_begin=True, begin_string="start")
+                        command_stanza, instances=start_instances, instance_donor=command_name, instance_of=command_name, is_begin=True, begin_string="start")
+    stop_instances = ["stop" + i for i in instances]
     add_command_to_dict(commands_dict, command_name,
-                        command_stanza, instance_donor=command_name, instance_of=command_name, is_end=True, end_string="stop")
+                        command_stanza, instances=stop_instances, instance_donor=command_name, instance_of=command_name, is_end=True, end_string="stop")
 
     # add instance commands
     for instance in instances:

@@ -364,15 +364,14 @@ def generate_env_related_dict(env_related_dict, commands_dict):
 
 
 def process_generated_environment(commands_dict, command_name, command_stanza, ignored_stems_for_related, env_related_dict):
-    if command_name != "section":
-        return
 
     sequence = []
     instance_stems = []
     instances = []
 
-    print(ppxml(command_stanza))
-    print(command_stanza.attrib)
+    # # TODO: Remove after debugging
+    # print(ppxml(command_stanza))
+    # print(command_stanza.attrib)
 
     sequence_xml = command_stanza.xpath(
         'cd:sequence', namespaces=NSMAP)[0]
@@ -380,14 +379,23 @@ def process_generated_environment(commands_dict, command_name, command_stanza, i
     for part in sequence_xml:
         sequence.append(part.get('value'))
 
+    # We're playing fast and loose here with the 2 case; TODO check for "string" slement type and
+    # use that condition to determin pre-and postfix values
+
     if len(sequence) == 3:
         command_prefix = sequence[0]
         command_stem = sequence[1]
         command_postfix = sequence[2]
+    elif len(sequence) == 2:
+        command_prefix = sequence[0]
+        command_stem = sequence[1]
+        command_postfix = ""
     elif len(sequence) == 1:
         command_prefix = ""
         command_stem = sequence[0]
         command_postfix = ""
+    else:
+        print("Help!")
 
     instances_xml = command_stanza.xpath(
         'cd:instances/cd:constant', namespaces=NSMAP)
@@ -395,15 +403,18 @@ def process_generated_environment(commands_dict, command_name, command_stanza, i
     for instance_stem in instances_xml:
         instance_stems.append(instance_stem.get('value'))
 
-    instance_stems.remove(command_stem)
+    if command_stem in instance_stems:
+        instance_stems.remove(command_stem)
 
     for this_stem in instance_stems:
         instance_name = command_prefix + this_stem + command_postfix
         instances.append(instance_name)
-    print(
-        f"## Variant for {command_name} is of type instance, and is a generated environment")
-    print(f"### Sequence: {sequence}, {len(sequence)}")
-    print(f"### Instances: {instances}, {len(instances)}")
+
+    # TODO remove after debugging
+    # print(
+    #     f"## Variant for {command_name} is of type instance, and is a generated environment")
+    # print(f"### Sequence: {sequence}, {len(sequence)}")
+    # print(f"### Instances: {instances}, {len(instances)}")
 
     add_command_to_dict(commands_dict, command_name,
                         command_stanza, instances=instances)
@@ -417,7 +428,7 @@ def process_generated_environment(commands_dict, command_name, command_stanza, i
     # add instance commands
     for instance in instances:
         add_command_to_dict(commands_dict, instance,
-                            command_stanza, instance_donor=command_name, instance_of=command_name)
+                            command_stanza, instance_donor=command_name)
         add_command_to_dict(commands_dict, instance,
                             command_stanza, instance_donor=command_name, instance_of="start" + command_name, is_begin=True, begin_string="start")
         add_command_to_dict(commands_dict, instance,
@@ -434,7 +445,7 @@ def process_generated_environment(commands_dict, command_name, command_stanza, i
 def process_instance(commands_dict, command_name, command_stanza, ignored_stems_for_related, env_related_dict):
 
     # TODO remove after debugging
-    # if command_name == "section":
+    # if command_name == "placefloat":
     #     print(ppxml(command_stanza))
     #     print(command_stanza.attrib)
 
@@ -443,9 +454,9 @@ def process_instance(commands_dict, command_name, command_stanza, ignored_stems_
             commands_dict, command_name, command_stanza, ignored_stems_for_related, env_related_dict)
     elif command_stanza.get('generated') == 'yes':
         # TODO handle this case
-        pass
-        # print(
-        #     f"## Variant for {command_name} is of type instance")
+        if command_name not in commands_dict:
+            print(
+                f"## Unhandled variant for {command_name} is of type instance")
 
 
 def process_interface_tree(ft):
@@ -1488,6 +1499,13 @@ if __name__ == "__main__":
         # pp = pprint.PrettyPrinter(indent=2)
         # pp.pprint(related_dict)
 
+        # TODO remove after debugging
+        print("## unprocessed variants")
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint(variants_dict)
+        print("## number of unprocessed variants")
+        print(len(variants_dict))
+        print()
         print("Done!")
 
     elif args['all']:

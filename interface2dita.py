@@ -261,7 +261,7 @@ def generate_args_data(args_tree):
 
 
 def generate_command_data(
-        command_name, command_stanza, instances=[], instance_of=""):
+        command_name, command_stanza, instance_donor, instances=[], instance_of=""):
 
     keywords = []
 
@@ -301,6 +301,7 @@ def generate_command_data(
         'category': command_level,
         'instances': instances,
         'instance_of': instance_of,
+        'instance_donor': instance_donor,
         'keywords': keywords,
         'filename': source_filename,
         'args_tree': args_tree,
@@ -332,7 +333,7 @@ def list_of_commands(tr, nsp):
     return result
 
 
-def add_command_to_dict(this_dict, command_name, command_stanza, instances=[], instance_of="", is_begin=False, begin_string="", is_end=False, end_string=""):
+def add_command_to_dict(this_dict, command_name, command_stanza, instances=[], instance_of="", is_begin=False, begin_string="", is_end=False, end_string="", instance_donor=""):
 
     if is_begin:
         command_name = begin_string + command_name
@@ -344,20 +345,10 @@ def add_command_to_dict(this_dict, command_name, command_stanza, instances=[], i
             f"Warning! Attempting to clobber entry for {command_name}!")
     else:
         this_dict[command_name] = generate_command_data(
-            command_name, command_stanza, instances, instance_of)
+            command_name, command_stanza, instance_donor, instances, instance_of, )
 
     if is_end:
         this_dict[command_name]['arguments'] = []
-
-
-# def add_instance_to_dict(this_dict, command_name, command_stanza, instances=[], instance_of=""):
-
-#     if command_name in this_dict:
-#         logger.debug(
-#             f"Warning! Attempting to clobber entry for {command_name}!")
-#     else:
-#         this_dict[command_name] = generate_command_data(
-#             command_name, command_stanza, instances, instance_of)
 
 
 def generate_env_related_dict(env_related_dict, commands_dict):
@@ -372,7 +363,7 @@ def generate_env_related_dict(env_related_dict, commands_dict):
     return env_related_dict
 
 
-def process_generated_environment(commands_dict, command_name, command_stanza):
+def process_generated_environment(commands_dict, command_name, command_stanza, ignored_stems_for_related, env_related_dict):
     if command_name != "section":
         return
 
@@ -406,23 +397,39 @@ def process_generated_environment(commands_dict, command_name, command_stanza):
 
     instance_stems.remove(command_stem)
 
+    for this_stem in instance_stems:
+        instance_name = command_prefix + this_stem + command_postfix
+        instances.append(instance_name)
     print(
         f"## Variant for {command_name} is of type instance, and is a generated environment")
     print(f"### Sequence: {sequence}, {len(sequence)}")
     print(f"### Instances: {instances}, {len(instances)}")
 
+    add_command_to_dict(commands_dict, command_name,
+                        command_stanza, instances=instances)
+    add_command_to_dict(commands_dict, command_name,
+                        command_stanza, instance_donor=command_name, instance_of=command_name, is_begin=True, begin_string="start")
+    add_command_to_dict(commands_dict, command_name,
+                        command_stanza, instance_donor=command_name, instance_of=command_name, is_end=True, end_string="stop")
+
     # add instance commands
-    for this_stem in instance_stems:
-        instance_name = command_prefix + this_stem + command_postfix
-        instances.append(instance_name)
-        add_command_to_dict(commands_dict, instance_name,
-                            command_stanza, instance_of=command_name)
+    for instance in instances:
+        add_command_to_dict(commands_dict, instance,
+                            command_stanza, instance_donor=command_name, instance_of=command_name)
+        add_command_to_dict(commands_dict, instance,
+                            command_stanza, instance_donor=command_name, instance_of="start" + command_name, is_begin=True, begin_string="start")
+        add_command_to_dict(commands_dict, instance,
+                            command_stanza, instance_donor=command_name, instance_of="stop" + command_name, is_end=True, end_string="stop")
 
     add_command_to_dict(commands_dict, command_name,
                         command_stanza, instances=instances)
 
+    # We keep track of appropriate commands to add to the generated reltable here
+    if command_name not in ignored_stems_for_related:
+        env_related_dict[command_name] = []
 
-def process_instance(commands_dict, command_name, command_stanza):
+
+def process_instance(commands_dict, command_name, command_stanza, ignored_stems_for_related, env_related_dict):
 
     # TODO remove after debugging
     # if command_name == "section":
@@ -431,8 +438,9 @@ def process_instance(commands_dict, command_name, command_stanza):
 
     if command_stanza.get('generated') == 'yes' and command_stanza.get('type') == "environment":
         process_generated_environment(
-            commands_dict, command_name, command_stanza)
+            commands_dict, command_name, command_stanza, ignored_stems_for_related, env_related_dict)
     elif command_stanza.get('generated') == 'yes':
+        # TODO handle this case
         pass
         # print(
         #     f"## Variant for {command_name} is of type instance")
@@ -444,6 +452,8 @@ def process_interface_tree(ft):
     """
 
     logger.debug("### Processing interface tree.")
+
+    ignored_stems_for_related = ['startstop']
 
     commands_dict = {}
     variants_dict = {}
@@ -503,7 +513,7 @@ def process_interface_tree(ft):
             elif variant_type == "instance":
                 #print(f"Variant for {command_name} is of type instance")
                 process_instance(commands_dict, command_name,
-                                 command_stanza)
+                                 command_stanza, ignored_stems_for_related, env_related_dict)
             else:
                 add_command_to_dict(variants_dict, command_name,
                                     command_stanza)
@@ -521,9 +531,6 @@ def process_interface_tree(ft):
                 add_command_to_dict(
                     commands_dict, command_name, command_stanza)
 
-        ignored_stems_for_related = ['startstop']
-
-        # TODO make sure this works with instances
         if command_type == "environment":
             # Generate start and stop commands
             add_command_to_dict(commands_dict, command_name,
@@ -596,6 +603,32 @@ def add_topic_notes():
     </section>"""
     notes_comment = etree.Comment(notes_comment_string)
     return notes_comment
+
+
+def add_topic_instances(instances):
+    instances_section_element = etree.Element('section')
+
+    title_element = etree.Element('title')
+    title_element.text = "Instances"
+    instances_section_element.append(title_element)
+
+    intro_p_element = etree.Element('p')
+    intro_p_element.text = "This command has the following instances:"
+    instances_section_element.append(intro_p_element)
+
+    instance_list_element = etree.Element('ul')
+
+    for i in instances:
+        li_element = etree.Element('li')
+        xref_element = etree.Element(
+            'xref', href=f"../../{get_command_url(i)}")
+        xref_element.text = i
+        li_element.append(xref_element)
+        instance_list_element.append(li_element)
+
+    instances_section_element.append(instance_list_element)
+
+    return instances_section_element
 
 
 def add_topic_refbody_settings(argument_data):
@@ -1105,6 +1138,16 @@ def add_topic_refbody_refsyn(topic_data):
     if len(topic_data['arguments']) > 0:
         refsyn_element.append(add_topic_refbody_refsyn_simpletable(topic_data))
 
+    # if this command is an instance, indicate it
+    if topic_data['instance_of'] != "":
+        instance_of_xref_element = etree.Element(
+            'xref', href=f"../../{get_command_url(topic_data['instance_of'])}")
+        instance_of_xref_element.tail = "."
+        note_element = etree.Element('note')
+        note_element.text = "Instance of "
+        note_element.append(instance_of_xref_element)
+        refsyn_element.append(note_element)
+
     return refsyn_element
 
 
@@ -1118,6 +1161,9 @@ def add_topic_refbody(topic_data):
             refbody_element.append(add_topic_refbody_options(argument_data))
         elif argument_data['type'] == 'SETTINGS':
             refbody_element.append(add_topic_refbody_settings(argument_data))
+
+    if topic_data['instances']:
+        refbody_element.append(add_topic_instances(topic_data['instances']))
 
     refbody_element.append(add_topic_notes())
     refbody_element.append(add_topic_mwe())

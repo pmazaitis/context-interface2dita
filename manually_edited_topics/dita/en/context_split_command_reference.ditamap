@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
-
-<map  xml:lang="en">
-    <title><ph conkeyref="definitions/product_name"/> User Command Reference.</title>
+<map xml:lang="en">
+    <title><ph conkeyref="definitions/product_name"/> Full Command Reference.</title>
     <keydef keys="definitions" href="support/definitions.dita"/>
     <topichead navtitle="About This Manual">
         <topicref href="frontmatter/c_what_this_manual_is.dita"/>
@@ -25,12 +24,16 @@
             <topicref href="frontmatter/c_extendable_commands.dita"/>
         </topicref>
     </topichead>
-    <mapref href="user_commands.ditamap" format="ditamap"/>
+    <topichead navtitle="User Commands">
+        <mapref href="user_commands.ditamap" format="ditamap"/>
+    </topichead>
+    <topichead navtitle="System Commands">
+        <mapref href="system_commands.ditamap" format="ditamap"/>
+    </topichead>
     <topichead navtitle="Appendices">
         <mapref href="placeholders.ditamap" format="ditamap"/>
         <mapref href="glossary.ditamap" format="ditamap"/>
     </topichead>
-    
     <mapref href="relations.ditamap" format="ditamap"/>
     <topicref href="inheritance.ditamap" format="ditamap"/>
 </map>

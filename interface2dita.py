@@ -261,7 +261,7 @@ def generate_args_data(args_tree):
 
 
 def generate_command_data(
-        command_name, command_stanza):
+        command_name, command_stanza, instances=[], instance_of=""):
 
     keywords = []
 
@@ -289,11 +289,6 @@ def generate_command_data(
         source_filename = "UNKNOWN"
 
     try:
-        command_variant = command_stanza.get('variant')
-    except:
-        command_variant = ""
-
-    try:
         args_tree = command_stanza.xpath('cd:arguments', namespaces=NSMAP)
     except:
         args_tree = []
@@ -304,7 +299,8 @@ def generate_command_data(
         'name': command_name,
         'is_system': command_is_system,
         'category': command_level,
-        'variant': command_variant,
+        'instances': instances,
+        'instance_of': instance_of,
         'keywords': keywords,
         'filename': source_filename,
         'args_tree': args_tree,
@@ -336,7 +332,7 @@ def list_of_commands(tr, nsp):
     return result
 
 
-def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False, begin_string="", is_end=False, end_string=""):
+def add_command_to_dict(this_dict, command_name, command_stanza, instances=[], instance_of="", is_begin=False, begin_string="", is_end=False, end_string=""):
 
     if is_begin:
         command_name = begin_string + command_name
@@ -348,10 +344,20 @@ def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False,
             f"Warning! Attempting to clobber entry for {command_name}!")
     else:
         this_dict[command_name] = generate_command_data(
-            command_name, command_stanza)
+            command_name, command_stanza, instances, instance_of)
 
     if is_end:
         this_dict[command_name]['arguments'] = []
+
+
+# def add_instance_to_dict(this_dict, command_name, command_stanza, instances=[], instance_of=""):
+
+#     if command_name in this_dict:
+#         logger.debug(
+#             f"Warning! Attempting to clobber entry for {command_name}!")
+#     else:
+#         this_dict[command_name] = generate_command_data(
+#             command_name, command_stanza, instances, instance_of)
 
 
 def generate_env_related_dict(env_related_dict, commands_dict):
@@ -364,6 +370,72 @@ def generate_env_related_dict(env_related_dict, commands_dict):
                 env_related_dict[stem].append(pre + stem)
 
     return env_related_dict
+
+
+def process_generated_environment(commands_dict, command_name, command_stanza):
+    if command_name != "section":
+        return
+
+    sequence = []
+    instance_stems = []
+    instances = []
+
+    print(ppxml(command_stanza))
+    print(command_stanza.attrib)
+
+    sequence_xml = command_stanza.xpath(
+        'cd:sequence', namespaces=NSMAP)[0]
+
+    for part in sequence_xml:
+        sequence.append(part.get('value'))
+
+    if len(sequence) == 3:
+        command_prefix = sequence[0]
+        command_stem = sequence[1]
+        command_postfix = sequence[2]
+    elif len(sequence) == 1:
+        command_prefix = ""
+        command_stem = sequence[0]
+        command_postfix = ""
+
+    instances_xml = command_stanza.xpath(
+        'cd:instances/cd:constant', namespaces=NSMAP)
+
+    for instance_stem in instances_xml:
+        instance_stems.append(instance_stem.get('value'))
+
+    instance_stems.remove(command_stem)
+
+    print(
+        f"## Variant for {command_name} is of type instance, and is a generated environment")
+    print(f"### Sequence: {sequence}, {len(sequence)}")
+    print(f"### Instances: {instances}, {len(instances)}")
+
+    # add instance commands
+    for this_stem in instance_stems:
+        instance_name = command_prefix + this_stem + command_postfix
+        instances.append(instance_name)
+        add_command_to_dict(commands_dict, instance_name,
+                            command_stanza, instance_of=command_name)
+
+    add_command_to_dict(commands_dict, command_name,
+                        command_stanza, instances=instances)
+
+
+def process_instance(commands_dict, command_name, command_stanza):
+
+    # TODO remove after debugging
+    # if command_name == "section":
+    #     print(ppxml(command_stanza))
+    #     print(command_stanza.attrib)
+
+    if command_stanza.get('generated') == 'yes' and command_stanza.get('type') == "environment":
+        process_generated_environment(
+            commands_dict, command_name, command_stanza)
+    elif command_stanza.get('generated') == 'yes':
+        pass
+        # print(
+        #     f"## Variant for {command_name} is of type instance")
 
 
 def process_interface_tree(ft):
@@ -396,7 +468,7 @@ def process_interface_tree(ft):
             continue
 
         try:
-            variant_type = command_stanza.attrib['variant']
+            variant_type = command_stanza.get('variant')
         except:
             variant_type = False
 
@@ -423,11 +495,15 @@ def process_interface_tree(ft):
 
         if variant_type:
             # Handle variants, and instances of variants
-
+            #print(f"Variant found for {command_name}")
             # what the heck is happening with setuppapersize
             if command_name == "setuppapersize":
                 add_command_to_dict(commands_dict, command_name,
                                     command_stanza)
+            elif variant_type == "instance":
+                #print(f"Variant for {command_name} is of type instance")
+                process_instance(commands_dict, command_name,
+                                 command_stanza)
             else:
                 add_command_to_dict(variants_dict, command_name,
                                     command_stanza)
@@ -447,6 +523,7 @@ def process_interface_tree(ft):
 
         ignored_stems_for_related = ['startstop']
 
+        # TODO make sure this works with instances
         if command_type == "environment":
             # Generate start and stop commands
             add_command_to_dict(commands_dict, command_name,
@@ -1259,7 +1336,7 @@ def write_related_ditamap(related_dict, path):
         for command in command_list:
             sibling_list = command_list.copy()
             sibling_list.remove(command)
-            #print(command, sibling_list)
+            # print(command, sibling_list)
             relrow_element = etree.Element('relrow')
             single_relcell_element = etree.Element('relcell')
             topicref_element = etree.Element(
@@ -1333,6 +1410,7 @@ if __name__ == "__main__":
     parser.add_argument("--lang", type=str, default="en")
     parser.add_argument("--name", type=str)
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--testdata", action="store_true")
     args = vars(parser.parse_args())
 
     input_file = args['input']
@@ -1355,7 +1433,16 @@ if __name__ == "__main__":
     # pp = pprint.PrettyPrinter(indent=2)
     # pp.pprint(related_dict)
 
-    if args['all']:
+    if args['testdata']:
+
+        # TODO remove after debugging
+        # print("## reltable Data Structure")
+        # pp = pprint.PrettyPrinter(indent=2)
+        # pp.pprint(related_dict)
+
+        print("Done!")
+
+    elif args['all']:
 
         print("Generating command topics.")
 

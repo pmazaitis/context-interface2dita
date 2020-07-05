@@ -425,6 +425,7 @@ def add_environment(command_name, command_stanza):
 
 
 def add_class(command_name, command_stanza):
+
     pass
     # Simple case of single command
     # add_command_to_dict(
@@ -465,14 +466,16 @@ def get_stanza_type(command_stanza):
     except:
         logger.debug(
             f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
-        return "ENONAME"
+        return "ENONAME", "variant"
 
     if command_name.encode(
             "ascii", errors="ignore").decode() == "":
         # we have no name to work with, bail out
         logger.debug(
             f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
-        return "EEMPTYNAME"
+        return "EEMPTYNAME", "variant"
+
+    # print(f"Got command anme: {command_name}")
 
     try:
         variant_type = command_stanza.attrib['variant']
@@ -484,7 +487,10 @@ def get_stanza_type(command_stanza):
     except:
         command_type = False
 
-    if variant_type == "instance":  # and test for children
+    has_instances = command_stanza.xpath(
+        'boolean(cd:instances/cd:constant)', namespaces=NSMAP)
+
+    if variant_type == "instance" and has_instances:
         return command_name, "class"
     elif command_type == "environment":
         return command_name, "environment"
@@ -505,8 +511,7 @@ def process_interface_tree(ft):
     commands_dict = {}
     environments_dict = {}
     variants_dict = {}
-    env_related_dict = {}
-    inst_related_dict = {}
+    relations_dict = {}
 
     interface_commands = list_of_commands(ft, NSMAP)
 
@@ -521,34 +526,34 @@ def process_interface_tree(ft):
         elif stanza_type == "command":
             add_command(command_name, command_stanza)
         elif stanza_type == "variant":
-            process_variant(command_name, command_stanza))
+            process_variant(command_name, command_stanza)
 
     # Run back through the dict of commands stems, and add to the child list any
     # command that has the environment as a stem of common forms
 
-    env_related_dict=generate_env_related_dict(
-        env_related_dict, commands_dict)
+    # env_related_dict = generate_env_related_dict(
+    #     env_related_dict, commands_dict)
 
-    return commands_dict, variants_dict, classes_dict, enviroments_dict, env_related_dict, inst_related_dict
+    return commands_dict, variants_dict, classes_dict, environments_dict, relations_dict
 
 # --- Topic Building Functions ---
 
 
 def add_topic_rellinks(topic_data):
-    related_links_string=f"""
+    related_links_string = f"""
     <related-links>
       <link href="{SOURCE_BASE_URL}{topic_data['filename']}" scope="external" format="html">
         <linktext>Command definition in the <ph conkeyref="definitions/product_name"/> source file  <filepath>{topic_data['filename']}</filepath></linktext>
       </link>
     </related-links>"""
 
-    related_links_element=etree.fromstring(related_links_string)
+    related_links_element = etree.fromstring(related_links_string)
 
     return related_links_element
 
 
 def add_topic_second_ex():
-    second_example_string="""<example id="example_02" rev="0" otherprops="no_output">
+    second_example_string = """<example id="example_02" rev="0" otherprops="no_output">
       <title>Descriptive Example Title</title>
       <codeblock outputclass="normalize-space">
 \\starttext
@@ -558,12 +563,12 @@ def add_topic_second_ex():
 \\stoptext
       </codeblock>
     </example>"""
-    second_example_comment=etree.Comment(second_example_string)
+    second_example_comment = etree.Comment(second_example_string)
     return second_example_comment
 
 
 def add_topic_mwe():
-    mwe_string="""
+    mwe_string = """
     <example id="mwe" rev="0" otherprops="no_output">
       <title>Minimal Working Example</title>
       <codeblock outputclass="normalize-space">
@@ -574,64 +579,64 @@ def add_topic_mwe():
 \\stoptext
       </codeblock>
     </example>"""
-    mwe_element=etree.fromstring(mwe_string)
+    mwe_element = etree.fromstring(mwe_string)
     return mwe_element
 
 
 def add_topic_notes():
-    notes_comment_string="""<section id="notes">
+    notes_comment_string = """<section id="notes">
       <title>Notes</title>
       <p></p>
     </section>"""
-    notes_comment=etree.Comment(notes_comment_string)
+    notes_comment = etree.Comment(notes_comment_string)
     return notes_comment
 
 
 def add_topic_refbody_settings(argument_data):
 
-    settings_donors=set()
-    options_donors=set()
+    settings_donors = set()
+    options_donors = set()
 
-    settings_section_element=etree.Element(
-        'section', id = argument_data['name'])
+    settings_section_element = etree.Element(
+        'section', id=argument_data['name'])
 
-    title_element=etree.Element('title')
-    title_element.text="Settings"
+    title_element = etree.Element('title')
+    title_element.text = "Settings"
     settings_section_element.append(title_element)
 
-    settings_table_element=etree.Element(
-        'table', frame = "all", rowsep = "1", colsep = "1")
+    settings_table_element = etree.Element(
+        'table', frame="all", rowsep="1", colsep="1")
 
     # We need a tgroup for each child
 
     for c in argument_data['children']:
         if c['type'] == 'keys':
             # We have a set of keys to process
-            table_group_element=etree.Element('tgroup', cols = "2")
+            table_group_element = etree.Element('tgroup', cols="2")
             table_group_element.append(etree.Element(
                 'colspec', colname="value_name", colnum="1", colwidth="1*"))
             table_group_element.append(etree.Element(
                 'colspec', colname="value_desc", colnum="2", colwidth="1*"))
 
-            table_head_element=etree.Element('thead')
+            table_head_element = etree.Element('thead')
 
-            table_head_first_row_element=etree.Element('row')
+            table_head_first_row_element = etree.Element('row')
 
             for k in c['keys']:
                 if k['type'] == "inherit":
-                    table_head_title_entry=etree.Element(
-                        'entry', namest = "value_name", nameend = "value_desc")
-                    table_head_title_entry.text=f"{c['name']}"
-                    ph_element=etree.Element('ph')
-                    ph_element.text=" (Inherits from "
-                    xref_element=etree.Element(
-                        'xref', href = f"../{k['donor'][0]}/r_command_{k['donor']}.dita")
-                    xref_element.tail=")"
+                    table_head_title_entry = etree.Element(
+                        'entry', namest="value_name", nameend="value_desc")
+                    table_head_title_entry.text = f"{c['name']}"
+                    ph_element = etree.Element('ph')
+                    ph_element.text = " (Inherits from "
+                    xref_element = etree.Element(
+                        'xref', href=f"../{k['donor'][0]}/r_command_{k['donor']}.dita")
+                    xref_element.tail = ")"
                     ph_element.append(xref_element)
                     table_head_title_entry.append(ph_element)
                     break
             else:
-                table_head_title_entry=etree.Element(
+                table_head_title_entry = etree.Element(
                     'entry', namest="value_name", nameend="value_desc")
                 table_head_title_entry.text = c['name']
 
@@ -1413,7 +1418,7 @@ if __name__ == "__main__":
 
     print("Processing interface file.")
 
-    commands_dict, variants_dict, related_dict = process_interface_tree(
+    commands_dict, variants_dict, classes_dict, environments_dict, relations_dict = process_interface_tree(
         full_tree)
 
     # TODO remove after debugging
@@ -1464,7 +1469,7 @@ if __name__ == "__main__":
 
         write_inheritance_ditamap(donor_set, focus_path)
 
-        write_related_ditamap(related_dict, focus_path)
+        write_related_ditamap(relations_dict, focus_path)
 
         # Ditamap files for DITA processors
         write_command_ditamap(full_topics_list, focus_path,

@@ -461,21 +461,7 @@ def get_stanza_type(command_stanza):
     #
     # ...get reported, but no commands are created?
 
-    try:
-        command_name = command_stanza.attrib['name']
-    except:
-        logger.debug(
-            f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
-        return "ENONAME", "variant"
-
-    if command_name.encode(
-            "ascii", errors="ignore").decode() == "":
-        # we have no name to work with, bail out
-        logger.debug(
-            f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
-        return "EEMPTYNAME", "variant"
-
-    # print(f"Got command anme: {command_name}")
+    # We want the return values from here to be sufficient to disambiguate any collisions
 
     try:
         variant_type = command_stanza.attrib['variant']
@@ -487,17 +473,36 @@ def get_stanza_type(command_stanza):
     except:
         command_type = False
 
+    try:
+        environment_prefix = command_stanza.attrib['begin']
+    except:
+        environment_prefix = False
+
+    try:
+        command_name = command_stanza.attrib['name']
+    except:
+        logger.debug(
+            f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
+        return "ENONAME", "variant", variant_type, environment_prefix
+
+    if command_name.encode(
+            "ascii", errors="ignore").decode() == "":
+        # we have no name to work with, bail out
+        logger.debug(
+            f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
+        return "EEMPTYNAME", "variant", variant_type, environment_prefix
+
     has_instances = command_stanza.xpath(
         'boolean(cd:instances/cd:constant)', namespaces=NSMAP)
 
     if variant_type == "instance" and has_instances:
-        return command_name, "class"
+        return command_name, "class", variant_type, environment_prefix
     elif command_type == "environment":
-        return command_name, "environment"
+        return command_name, "environment", variant_type, environment_prefix
     elif variant_type == False:
-        return command_name, "command"
+        return command_name, "command", variant_type, environment_prefix
     else:
-        return command_name, "variant"
+        return command_name, "variant", variant_type, environment_prefix
 
 
 def process_interface_tree(ft):
@@ -517,7 +522,20 @@ def process_interface_tree(ft):
 
     for command_stanza in interface_commands:
 
-        command_name, stanza_type = get_stanza_type(command_stanza)
+        command_name, stanza_type, variant_type, environment_prefix = get_stanza_type(
+            command_stanza)
+
+        # print(
+        #     f"Found command {command_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
+
+        collision_list = []
+        command_signature = (command_name, stanza_type,
+                             variant_type, environment_prefix)
+        if command_signature in collision_list:
+            logger.warn(
+                f"Collision for command {command_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
+        else:
+            collision_list.append(command_signature)
 
         if stanza_type == "class":
             add_class(command_name, command_stanza)

@@ -1454,10 +1454,11 @@ def get_reltable_width(related_list):
 
     for row in related_list:
         if 'instances' in row:
-            if len(row['instnaces']) > longest_row:
-                longest_row = len(row['instnaces'])
+            if len(row['instances']) > longest_row:
+                longest_row = len(row['instances'])
 
-    return longest_row
+    # We add two here to accomodate a link to the umbrella topic for the class, the environment, or both
+    return longest_row + 2
 
 
 def write_related_ditamap(related_list, path):
@@ -1482,13 +1483,6 @@ def write_related_ditamap(related_list, path):
 
     reltable_element.append(relheader_element)
 
-    # reltable_header_row_string = """<relheader>
-    #   <relcolspec type="reference"><!--Command--></relcolspec>
-    #   <relcolspec type="reference"><!--Related--></relcolspec>
-    # </relheader>"""
-
-    # reltable_element.append(etree.fromstring(reltable_header_row_string))
-
     for row in related_list:
         relrow_element = etree.Element('relrow')
         print(row)
@@ -1496,30 +1490,43 @@ def write_related_ditamap(related_list, path):
             print(f"Found environment")
             relcell_element = etree.Element('relcell')
             relcell_element.attrib['collection-type'] = "family"
+            topicref_element = etree.Element(
+                'topicref', keyref=f"environment_{row['stem']}")
+            relcell_element.append(topicref_element)
             for member in row['members']:
                 topicref_element = etree.Element(
                     'topicref', keyref=f"command_{member}")
                 relcell_element.append(topicref_element)
             relrow_element.append(relcell_element)
+            for i in range(reltable_width - len(relrow_element)):
+                relrow_element.append(etree.Element('relcell'))
+
         elif 'name' in row:
             print(f"Found class")
-        # for command in command_list:
-        #     sibling_list = command_list.copy()
-        #     sibling_list.remove(command)
-        #     # print(command, sibling_list)
-        #     relrow_element = etree.Element('relrow')
-        #     single_relcell_element = etree.Element('relcell')
-        #     topicref_element = etree.Element(
-        #         'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
-        #     single_relcell_element.append(topicref_element)
-        #     relrow_element.append(single_relcell_element)
-        #     multiple_relcell_element = etree.Element('relcell')
-        #     for command in sibling_list:
-        #         topicref_element = etree.Element(
-        #             'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
-        #         multiple_relcell_element.append(topicref_element)
-        #     relrow_element.append(multiple_relcell_element)
-        #     reltable_element.append(relrow_element)
+            for instance in row['instances']:
+                # Make a relcell
+                relcell_element = etree.Element('relcell')
+                # populate the relcell
+                if type(instance) == str:
+                    relcell_element = etree.Element('relcell')
+                    topicref_element = etree.Element(
+                        'topicref', keyref=f"command_{instance}")
+                    relcell_element.append(topicref_element)
+                elif type(instance) == dict:
+                    relcell_element = etree.Element('relcell')
+                    relcell_element.attrib['collection-type'] = "family"
+                    for member in instance['members']:
+                        topicref_element = etree.Element(
+                            'topicref', keyref=f"command_{member}")
+                        relcell_element.append(topicref_element)
+                    relrow_element.append(relcell_element)
+                # add relcell to row
+                relrow_element.append(relcell_element)
+
+            # pad row with empty cells
+            for i in range(reltable_width - len(relrow_element)):
+                relrow_element.append(etree.Element('relcell'))
+
         reltable_element.append(relrow_element)
 
     inheritance_map.append(reltable_element)

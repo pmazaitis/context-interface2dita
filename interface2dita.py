@@ -410,16 +410,12 @@ def add_environment(stanza_name, stanza, environments_dict, commands_dict, relat
     start_command_name = env_start_string + stanza_name
     stop_command_name = env_stop_string + stanza_name
 
-    this_environment = {}
-    this_environment['start'] = start_command_name
-    this_environment['stop'] = stop_command_name
-
     print(
         f" ENVIRON - For the environment {stanza_name}, generating {start_command_name}, {stop_command_name}")
     add_command(start_command_name, stanza, commands_dict)
+    environment_relations['members'].append(start_command_name)
     add_command(stop_command_name, stanza, commands_dict, with_arguments=False)
-
-    environment_relations['members'].append(this_environment)
+    environment_relations['members'].append(stop_command_name)
 
     relations_list.append(environment_relations)
 
@@ -1452,7 +1448,21 @@ def write_inheritance_ditamap(donor_set, path):
         f.write(output)
 
 
+def get_reltable_width(related_list):
+
+    longest_row = 1
+
+    for row in related_list:
+        if 'instances' in row:
+            if len(row['instnaces']) > longest_row:
+                longest_row = len(row['instnaces'])
+
+    return longest_row
+
+
 def write_related_ditamap(related_list, path):
+
+    reltable_width = get_reltable_width(related_list)
     inheritance_map = etree.Element('map')
     attr = inheritance_map.attrib
     attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
@@ -1465,12 +1475,19 @@ def write_related_ditamap(related_list, path):
 
     reltable_element = etree.Element('reltable')
 
-    reltable_header_row_string = """<relheader>
-      <relcolspec type="reference"><!--Command--></relcolspec>
-      <relcolspec type="reference"><!--Related--></relcolspec>
-    </relheader>"""
+    relheader_element = etree.Element('relheader')
 
-    reltable_element.append(etree.fromstring(reltable_header_row_string))
+    for i in range(reltable_width):
+        relheader_element.append(etree.Element('relcolspec', type='reference'))
+
+    reltable_element.append(relheader_element)
+
+    # reltable_header_row_string = """<relheader>
+    #   <relcolspec type="reference"><!--Command--></relcolspec>
+    #   <relcolspec type="reference"><!--Related--></relcolspec>
+    # </relheader>"""
+
+    # reltable_element.append(etree.fromstring(reltable_header_row_string))
 
     for row in related_list:
         relrow_element = etree.Element('relrow')
@@ -1479,8 +1496,10 @@ def write_related_ditamap(related_list, path):
             print(f"Found environment")
             relcell_element = etree.Element('relcell')
             relcell_element.attrib['collection-type'] = "family"
-            topicref_element = etree.Element(
-                'topicref', keyref=f"command_{row['members']['start']}")
+            for member in row['members']:
+                topicref_element = etree.Element(
+                    'topicref', keyref=f"command_{member}")
+                relcell_element.append(topicref_element)
             relrow_element.append(relcell_element)
         elif 'name' in row:
             print(f"Found class")

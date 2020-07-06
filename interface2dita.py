@@ -281,7 +281,8 @@ def generate_command_data(
         reported_category = False
 
     if reported_category:
-        keywords.append(reported_category)
+        for kw in reported_category.split():
+            keywords.append(kw)
 
     try:
         source_filename = command_stanza.get('file')
@@ -337,7 +338,7 @@ def list_of_commands(tr, nsp):
 
 
 def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False, begin_string="", is_end=False, end_string=""):
-
+    # We're not using this TODO remove
     if is_begin:
         command_name = begin_string + command_name
     elif is_end:
@@ -354,87 +355,181 @@ def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False,
         this_dict[command_name]['arguments'] = []
 
 
-def generate_env_related_dict(env_related_dict, commands_dict):
+# def generate_env_related_dict(env_related_dict, commands_dict):
 
-    prefixes = ['start', 'stop', 'setup', 'define']
+#     prefixes = ['start', 'stop', 'setup', 'define']
 
-    for stem in env_related_dict:
-        for pre in prefixes:
-            if pre + stem in commands_dict:
-                env_related_dict[stem].append(pre + stem)
+#     for stem in env_related_dict:
+#         for pre in prefixes:
+#             if pre + stem in commands_dict:
+#                 env_related_dict[stem].append(pre + stem)
 
-    return env_related_dict
-
-
-def process_variant(command_name, command_stanza):
-    pass
-    # Handle variants, and instances of variants
-
-    # what the heck is happening with setuppapersize
-    # if command_name == "setuppapersize":
-    #     add_command_to_dict(commands_dict, command_name,
-    #                         command_stanza)
-    # else:
-    #     add_command_to_dict(variants_dict, command_name,
-    #                         command_stanza)
+#     return env_related_dict
 
 
-def add_command(command_name, command_stanza):
-    pass
+def process_variant(stanza_name, stanza):
+
+    variant_type = stanza.get('variant')
+
+    print(
+        f" VARIANT - Noting variant for {stanza_name} with type {variant_type}...")
 
 
-def add_environment(command_name, command_stanza):
-    pass
+def add_command(command_name, stanza, commands_dict, with_arguments=True):
+    print(
+        f" COMMAND - Adding command for {command_name}...(arguments: {with_arguments})")
 
-    # Move this stuff into the environment builder
-    # if 'begin' in command_stanza.attrib:
-    #     found_begin = True
-    #     begin_string = command_stanza.attrib['begin']
-    # else:
-    #     found_begin = False
-    #     begin_string = ""
-
-    # if 'end' in command_stanza.attrib:
-    #     found_end = True
-    #     # This terrible nonsense is to handle NBSP in attribute value
-    #     end_string = command_stanza.attrib['end'].encode(
-    #         "ascii", errors="ignore").decode()
-    # else:
-    #     found_end = False
-    #     end_string = ""
-
-    #     ignored_stems_for_related = ['startstop']
-
-    # if command_type == "environment":
-    #     # Generate start and stop commands
-    #     add_command_to_dict(commands_dict, command_name,
-    #                         command_stanza, is_begin=True, begin_string="start")
-    #     add_command_to_dict(commands_dict, command_name,
-    #                         command_stanza, is_end=True, end_string="stop")
-    #     # We keep track of appropriate commands to add to the generated reltable here
-    #     if command_name not in ignored_stems_for_related:
-    #         env_related_dict[command_name] = []
-
-    # if found_begin or found_end:
-    # # We want to handle all the cases here; we may have begin, end, or both
-    # # (but we need to generate both commands in any case)
-    # add_command_to_dict(commands_dict, command_name,
-    #                     command_stanza, is_begin = True, begin_string = begin_string)
-    # add_command_to_dict(commands_dict, command_name,
-    #                     command_stanza, is_end = True, end_string = end_string)
+    if command_name in commands_dict:
+        logger.debug(
+            f"Warning! Attempting to clobber entry for {command_name}!")
+    else:
+        commands_dict[command_name] = generate_command_data(
+            command_name, stanza)
 
 
-def add_class(command_name, command_stanza):
+def add_environment(stanza_name, stanza, environments_dict, commands_dict, relations_list):
 
-    pass
-    # Simple case of single command
-    # add_command_to_dict(
-    #     commands_dict, command_name, command_stanza)
+    environment_relations = {}
+    environment_relations['stem'] = stanza_name
+    environment_relations['members'] = []
+
+    print(
+        f" ENVIRON - Starting on environment {stanza_name}...")
+
+    if 'begin' in stanza.attrib:
+        env_start_string = stanza.attrib['begin']
+    else:
+        env_start_string = "start"
+
+    if 'end' in stanza.attrib:
+        env_stop_string = stanza.attrib['end'].encode(
+            "ascii", errors="ignore").decode()
+    else:
+        env_stop_string = "stop"
+
+    start_command_name = env_start_string + stanza_name
+    stop_command_name = env_stop_string + stanza_name
+
+    this_environment = {}
+    this_environment['start'] = start_command_name
+    this_environment['stop'] = stop_command_name
+
+    print(
+        f" ENVIRON - For the environment {stanza_name}, generating {start_command_name}, {stop_command_name}")
+    add_command(start_command_name, stanza, commands_dict)
+    add_command(stop_command_name, stanza, commands_dict, with_arguments=False)
+
+    environment_relations['members'].append(this_environment)
+
+    relations_list.append(environment_relations)
 
 
-def get_stanza_type(command_stanza):
+def add_class(stanza_name, stanza, classes_dict,
+              environments_dict, commands_dict, relations_list):
 
-    # We are looking for one of three types of stanzas, and an excape case:
+    # TODO - dict of class instances, list of instances, some instances cna be envs
+    class_relations = {}
+    class_relations['name'] = stanza_name
+    class_relations['instances'] = []
+
+    print(
+        f"   CLASS - Starting on class {stanza_name}...")
+
+    # First, do we have an environment
+    try:
+        stanza_type = stanza.attrib['type']
+    except:
+        stanza_type = False
+
+    # Do we have a pattern
+
+    sequence_elements = stanza.xpath(
+        'cd:sequence/*', namespaces=NSMAP)
+
+    # if stanza_name == "placefloat":
+    #     print(f"{stanza_name} sequence is {sequence_elements}")
+
+    stem_seen = False
+    prefix = ""
+    default_stem = ""
+    postfix = ""
+
+    for sequence_element in sequence_elements:
+        # print(f"{stanza_name} sequence tag is {sequence_element.tag}")
+        if sequence_element.tag == "{http://www.pragma-ade.com/commands}string" and stem_seen == False:
+            prefix = sequence_element.get('value')
+        elif sequence_element.tag == "{http://www.pragma-ade.com/commands}instance":
+            default_stem = sequence_element.get('value')
+            stem_seen = True
+        elif sequence_element.tag == "{http://www.pragma-ade.com/commands}string" and stem_seen == True:
+            postfix = sequence_element.get('value')
+
+    instances = stanza.xpath(
+        'cd:instances/cd:constant/@value', namespaces=NSMAP)
+
+    if stanza_type == "environment":
+        # Process each instance as an environment
+        print(
+            f"CLASSENV - For the class {stanza_name}, generating environment")
+        environment_relations = {}
+        environment_relations['stem'] = stanza_name
+        environment_relations['members'] = []
+
+        for instance_name in instances:
+            instance_name = prefix + instance_name + postfix
+            # add_environment(instance_name, stanza,
+            #                 environments_dict, commands_dict, relations_list)
+
+            print(
+                f"CLASSENV - Starting on environment {instance_name} in class {stanza_name}...")
+
+            if 'begin' in stanza.attrib:
+                env_start_string = stanza.attrib['begin']
+            else:
+                env_start_string = "start"
+
+            if 'end' in stanza.attrib:
+                env_stop_string = stanza.attrib['end'].encode(
+                    "ascii", errors="ignore").decode()
+            else:
+                env_stop_string = "stop"
+
+            start_command_name = env_start_string + instance_name
+            stop_command_name = env_stop_string + instance_name
+
+            print(
+                f" ENVIRON - For the environment {stanza_name}, generating {start_command_name}, {stop_command_name}")
+            add_command(start_command_name, stanza, commands_dict)
+            environment_relations['members'].append(start_command_name)
+            add_command(stop_command_name, stanza,
+                        commands_dict, with_arguments=False)
+            environment_relations['members'].append(stop_command_name)
+
+        class_relations['instances'].append(environment_relations)
+
+    else:
+        # Process each instance as a command
+
+        all_instances = []
+
+        for instance_name in instances:
+            instance_name = prefix + instance_name + postfix
+            add_command(instance_name, stanza, commands_dict)
+            all_instances.append(instance_name)
+            class_relations['instances'].append(instance_name)
+
+        sep = ", "
+        all_instances = sep.join(all_instances)
+
+        print(
+            f"   CLASS - For the class {stanza_name}, generated {all_instances}")
+
+    relations_list.append(class_relations)
+
+
+def get_stanza_type(stanza):
+
+    # We are looking for one of three types of stanzas, and an escape case:
     #
     # CLASSES
     #
@@ -464,45 +559,45 @@ def get_stanza_type(command_stanza):
     # We want the return values from here to be sufficient to disambiguate any collisions
 
     try:
-        variant_type = command_stanza.attrib['variant']
+        variant_type = stanza.attrib['variant']
     except:
         variant_type = False
 
     try:
-        command_type = command_stanza.attrib['type']
+        stanza_type = stanza.attrib['type']
     except:
-        command_type = False
+        stanza_type = False
 
     try:
-        environment_prefix = command_stanza.attrib['begin']
+        environment_prefix = stanza.attrib['begin']
     except:
         environment_prefix = False
 
     try:
-        command_name = command_stanza.attrib['name']
+        stanza_name = stanza.attrib['name']
     except:
         logger.debug(
-            f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
+            f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(stanza)}\n\n")
         return "ENONAME", "variant", variant_type, environment_prefix
 
-    if command_name.encode(
+    if stanza_name.encode(
             "ascii", errors="ignore").decode() == "":
         # we have no name to work with, bail out
         logger.debug(
-            f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
+            f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(stanza)}\n\n")
         return "EEMPTYNAME", "variant", variant_type, environment_prefix
 
-    has_instances = command_stanza.xpath(
+    has_instances = stanza.xpath(
         'boolean(cd:instances/cd:constant)', namespaces=NSMAP)
 
     if variant_type == "instance" and has_instances:
-        return command_name, "class", variant_type, environment_prefix
-    elif command_type == "environment":
-        return command_name, "environment", variant_type, environment_prefix
+        return stanza_name, "class", variant_type, environment_prefix
+    elif stanza_type == "environment" and variant_type == False:
+        return stanza_name, "environment", variant_type, environment_prefix
     elif variant_type == False:
-        return command_name, "command", variant_type, environment_prefix
+        return stanza_name, "command", variant_type, environment_prefix
     else:
-        return command_name, "variant", variant_type, environment_prefix
+        return stanza_name, "variant", variant_type, environment_prefix
 
 
 def process_interface_tree(ft):
@@ -510,41 +605,74 @@ def process_interface_tree(ft):
     one of commands (style, document, and system) and one of variants.
     """
 
+    # some stanzas appear twice in the interface, and cannot be disambiguated:
+    interface_duplicates = [
+        'thinspace',
+        'monobold',
+        'xmlregisterns',
+        'defineinterlinespace',
+        'setupinterlinespace',
+        'setuplocalinterlinespace',
+        'switchtointerlinespace',
+        'dosetupcheckedinterlinespace',
+        'useinterlinespaceparameter',
+        'definelinefiller',
+        'setuplinefiller',  # Second one has global added, as of 2020-07-05
+        'setuplinefillers',
+        'startlinefiller',
+        'stoplinefiller',
+        'setlinefiller',
+        'starttexcode',
+        'stoptexcode',
+    ]
+
     logger.debug("### Processing interface tree.")
 
     classes_dict = {}
     commands_dict = {}
     environments_dict = {}
     variants_dict = {}
-    relations_dict = {}
+    relations_list = []
 
     interface_commands = list_of_commands(ft, NSMAP)
 
     for command_stanza in interface_commands:
 
-        command_name, stanza_type, variant_type, environment_prefix = get_stanza_type(
+        stanza_name, stanza_type, variant_type, environment_prefix = get_stanza_type(
             command_stanza)
 
         # print(
-        #     f"Found command {command_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
+        #     f"Found command {stanza_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
+
+        if stanza_name in commands_dict and stanza_name in interface_duplicates:
+            print(
+                f"     DUP - Found duplicate stanza for command {stanza_name}")
+            continue
+
+        if "start" + stanza_name in commands_dict and "start" + stanza_name in interface_duplicates:
+            print(
+                f"     DUP - Found duplicate environment stanza for command {stanza_name}")
+            continue
 
         collision_list = []
-        command_signature = (command_name, stanza_type,
+        command_signature = (stanza_name, stanza_type,
                              variant_type, environment_prefix)
         if command_signature in collision_list:
             logger.warn(
-                f"Collision for command {command_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
+                f"Collision for command {stanza_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
         else:
             collision_list.append(command_signature)
 
         if stanza_type == "class":
-            add_class(command_name, command_stanza)
+            add_class(stanza_name, command_stanza, classes_dict,
+                      environments_dict, commands_dict, relations_list)
         elif stanza_type == "environment":
-            add_environment(command_name, command_stanza)
+            add_environment(
+                stanza_name, command_stanza, environments_dict, commands_dict, relations_list)
         elif stanza_type == "command":
-            add_command(command_name, command_stanza)
+            add_command(stanza_name, command_stanza, commands_dict)
         elif stanza_type == "variant":
-            process_variant(command_name, command_stanza)
+            process_variant(stanza_name, command_stanza)
 
     # Run back through the dict of commands stems, and add to the child list any
     # command that has the environment as a stem of common forms
@@ -552,7 +680,7 @@ def process_interface_tree(ft):
     # env_related_dict = generate_env_related_dict(
     #     env_related_dict, commands_dict)
 
-    return commands_dict, variants_dict, classes_dict, environments_dict, relations_dict
+    return commands_dict, variants_dict, classes_dict, environments_dict, relations_list
 
 # --- Topic Building Functions ---
 
@@ -1324,7 +1452,7 @@ def write_inheritance_ditamap(donor_set, path):
         f.write(output)
 
 
-def write_related_ditamap(related_dict, path):
+def write_related_ditamap(related_list, path):
     inheritance_map = etree.Element('map')
     attr = inheritance_map.attrib
     attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
@@ -1344,24 +1472,36 @@ def write_related_ditamap(related_dict, path):
 
     reltable_element.append(etree.fromstring(reltable_header_row_string))
 
-    for command_list in related_dict.values():
-        for command in command_list:
-            sibling_list = command_list.copy()
-            sibling_list.remove(command)
-            # print(command, sibling_list)
-            relrow_element = etree.Element('relrow')
-            single_relcell_element = etree.Element('relcell')
+    for row in related_list:
+        relrow_element = etree.Element('relrow')
+        print(row)
+        if 'stem' in row:
+            print(f"Found environment")
+            relcell_element = etree.Element('relcell')
+            relcell_element.attrib['collection-type'] = "family"
             topicref_element = etree.Element(
-                'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
-            single_relcell_element.append(topicref_element)
-            relrow_element.append(single_relcell_element)
-            multiple_relcell_element = etree.Element('relcell')
-            for command in sibling_list:
-                topicref_element = etree.Element(
-                    'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
-                multiple_relcell_element.append(topicref_element)
-            relrow_element.append(multiple_relcell_element)
-            reltable_element.append(relrow_element)
+                'topicref', keyref=f"command_{row['members']['start']}")
+            relrow_element.append(relcell_element)
+        elif 'name' in row:
+            print(f"Found class")
+        # for command in command_list:
+        #     sibling_list = command_list.copy()
+        #     sibling_list.remove(command)
+        #     # print(command, sibling_list)
+        #     relrow_element = etree.Element('relrow')
+        #     single_relcell_element = etree.Element('relcell')
+        #     topicref_element = etree.Element(
+        #         'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
+        #     single_relcell_element.append(topicref_element)
+        #     relrow_element.append(single_relcell_element)
+        #     multiple_relcell_element = etree.Element('relcell')
+        #     for command in sibling_list:
+        #         topicref_element = etree.Element(
+        #             'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
+        #         multiple_relcell_element.append(topicref_element)
+        #     relrow_element.append(multiple_relcell_element)
+        #     reltable_element.append(relrow_element)
+        reltable_element.append(relrow_element)
 
     inheritance_map.append(reltable_element)
 
@@ -1422,6 +1562,7 @@ if __name__ == "__main__":
     parser.add_argument("--lang", type=str, default="en")
     parser.add_argument("--name", type=str)
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--test", action="store_true")
     args = vars(parser.parse_args())
 
     input_file = args['input']
@@ -1436,13 +1577,13 @@ if __name__ == "__main__":
 
     print("Processing interface file.")
 
-    commands_dict, variants_dict, classes_dict, environments_dict, relations_dict = process_interface_tree(
+    commands_dict, variants_dict, classes_dict, environments_dict, relations_list = process_interface_tree(
         full_tree)
 
     # TODO remove after debugging
-    # print("## reltable Data Structure")
-    # pp = pprint.PrettyPrinter(indent=2)
-    # pp.pprint(related_dict)
+    print("## reltable Data Structure")
+    pp = pprint.PrettyPrinter(indent=2)
+    pp.pprint(relations_list)
 
     if args['all']:
 
@@ -1468,46 +1609,46 @@ if __name__ == "__main__":
 
         print("Writing topic files.")
 
-        for num, (command_name, command_data) in enumerate(commands_dict.items()):
-            logger.info(f"{num:04}: Processing {command_data['name']}...")
+        # for num, (command_name, command_data) in enumerate(commands_dict.items()):
+        #     logger.info(f"{num:04}: Processing {command_data['name']}...")
 
-            command_data = commands_dict[command_name]
+        #     command_data = commands_dict[command_name]
 
-            xml_topic = generate_dita_topic(command_data)
+        #     xml_topic = generate_dita_topic(command_data)
 
-            full_topics_list.append(command_name)
-            if command_data['is_system']:
-                system_topics_list.append(command_data['name'])
-            else:
-                user_topics_list.append(command_data['name'])
+        #     full_topics_list.append(command_name)
+        #     if command_data['is_system']:
+        #         system_topics_list.append(command_data['name'])
+        #     else:
+        #         user_topics_list.append(command_data['name'])
 
-            write_command_topic(xml_topic, command_name, focus_path)
+        #     write_command_topic(xml_topic, command_name, focus_path)
 
         print("Writing maps.")
 
-        write_inheritance_ditamap(donor_set, focus_path)
+        # write_inheritance_ditamap(donor_set, focus_path)
 
-        write_related_ditamap(relations_dict, focus_path)
+        write_related_ditamap(relations_list, focus_path)
 
         # Ditamap files for DITA processors
-        write_command_ditamap(full_topics_list, focus_path,
-                              "full_commands.ditamap", "Full Commands")
-        write_command_ditamap(user_topics_list, focus_path,
-                              "user_commands.ditamap", "User Commands")
-        write_command_ditamap(system_topics_list, focus_path,
-                              "system_commands.ditamap", "System Commands")
+        # write_command_ditamap(full_topics_list, focus_path,
+        #                       "full_commands.ditamap", "Full Commands")
+        # write_command_ditamap(user_topics_list, focus_path,
+        #                       "user_commands.ditamap", "User Commands")
+        # write_command_ditamap(system_topics_list, focus_path,
+        #                       "system_commands.ditamap", "System Commands")
 
-        # XML files for ConTeXt setups
-        write_command_ditamap(full_topics_list, focus_path,
-                              "full_commands.xml", "Full Commands")
-        write_command_ditamap(user_topics_list, focus_path,
-                              "user_commands.xml", "User Commands")
-        write_command_ditamap(system_topics_list, focus_path,
-                              "system_commands.xml", "System Commands")
+        # # XML files for ConTeXt setups
+        # write_command_ditamap(full_topics_list, focus_path,
+        #                       "full_commands.xml", "Full Commands")
+        # write_command_ditamap(user_topics_list, focus_path,
+        #                       "user_commands.xml", "User Commands")
+        # write_command_ditamap(system_topics_list, focus_path,
+        #                       "system_commands.xml", "System Commands")
 
         print("Importing manually edited topics.")
 
-        import_manually_edited_topics(manual_topics_path, build_path)
+        # import_manually_edited_topics(manual_topics_path, build_path)
 
         print("Done.")
 
@@ -1535,6 +1676,8 @@ if __name__ == "__main__":
         else:
             print(f"Command name {commands_dict[req_name]} unknown!")
 
+    elif args['test']:
+        print("Data generated.")
     else:
         print("No action taken")
 

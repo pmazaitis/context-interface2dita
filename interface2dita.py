@@ -1824,22 +1824,21 @@ if __name__ == "__main__":
 
         print("Writing command topics.")
 
-        # for num, (command_name, command_data) in enumerate(commands_dict.items()):
-        #     logger.info(f"{num:04}: Processing {command_data['name']}...")
+        for num, (command_name, command_data) in enumerate(commands_dict.items()):
+            logger.info(f"{num:04}: Processing {command_data['name']}...")
 
-        #     command_data = commands_dict[command_name]
+            command_data = commands_dict[command_name]
 
-        #     xml_topic = generate_dita_topic(command_data)
+            xml_topic = generate_dita_topic(command_data)
 
-        #     full_topics_list.append(command_name)
-        #     if command_data['is_system']:
-        #         system_topics_list.append(command_data['name'])
-        #     else:
-        #         user_topics_list.append(command_data['name'])
+            full_topics_list.append(command_name)
+            if command_data['is_system']:
+                system_topics_list.append(command_data['name'])
+            else:
+                user_topics_list.append(command_data['name'])
 
-        #     write_command_topic(xml_topic, command_name, focus_path)
+            write_command_topic(xml_topic, command_name, focus_path)
 
-        # write env topics here
         print("Writing class topics.")
         for cmd_class in classes_list:
             write_class_topic(generate_class_topic(
@@ -1857,20 +1856,20 @@ if __name__ == "__main__":
         write_related_ditamap(relations_list, focus_path)
 
         # Ditamap files for DITA processors
-        # write_command_ditamap(full_topics_list, focus_path,
-        #                       "full_commands.ditamap", "Full Commands")
-        # write_command_ditamap(user_topics_list, focus_path,
-        #                       "user_commands.ditamap", "User Commands")
-        # write_command_ditamap(system_topics_list, focus_path,
-        #                       "system_commands.ditamap", "System Commands")
+        write_command_ditamap(full_topics_list, focus_path,
+                              "full_commands.ditamap", "Full Commands")
+        write_command_ditamap(user_topics_list, focus_path,
+                              "user_commands.ditamap", "User Commands")
+        write_command_ditamap(system_topics_list, focus_path,
+                              "system_commands.ditamap", "System Commands")
 
         # # XML files for ConTeXt setups
-        # write_command_ditamap(full_topics_list, focus_path,
-        #                       "full_commands.xml", "Full Commands")
-        # write_command_ditamap(user_topics_list, focus_path,
-        #                       "user_commands.xml", "User Commands")
-        # write_command_ditamap(system_topics_list, focus_path,
-        #                       "system_commands.xml", "System Commands")
+        write_command_ditamap(full_topics_list, focus_path,
+                              "full_commands.xml", "Full Commands")
+        write_command_ditamap(user_topics_list, focus_path,
+                              "user_commands.xml", "User Commands")
+        write_command_ditamap(system_topics_list, focus_path,
+                              "system_commands.xml", "System Commands")
 
         write_classes_ditamap(classes_list, focus_path)
 

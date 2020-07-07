@@ -387,7 +387,7 @@ def add_command(command_name, stanza, commands_dict, with_arguments=True):
             command_name, stanza)
 
 
-def add_environment(stanza_name, stanza, environments_dict, commands_dict, relations_list):
+def add_environment(stanza_name, stanza, environments_list, commands_dict, relations_list):
 
     environment_relations = {}
     environment_relations['stem'] = stanza_name
@@ -418,10 +418,12 @@ def add_environment(stanza_name, stanza, environments_dict, commands_dict, relat
     environment_relations['members'].append(stop_command_name)
 
     relations_list.append(environment_relations)
+    if stanza_name not in environments_list:
+        environments_list.append(stanza_name)
 
 
-def add_class(stanza_name, stanza, classes_dict,
-              environments_dict, commands_dict, relations_list):
+def add_class(stanza_name, stanza, classes_list,
+              environments_list, commands_dict, relations_list):
 
     # TODO - dict of class instances, list of instances, some instances cna be envs
     class_relations = {}
@@ -521,6 +523,8 @@ def add_class(stanza_name, stanza, classes_dict,
             f"   CLASS - For the class {stanza_name}, generated {all_instances}")
 
     relations_list.append(class_relations)
+    if stanza_name not in classes_list:
+        classes_list.append(stanza_name)
 
 
 def get_stanza_type(stanza):
@@ -624,9 +628,9 @@ def process_interface_tree(ft):
 
     logger.debug("### Processing interface tree.")
 
-    classes_dict = {}
+    classes_list = []
     commands_dict = {}
-    environments_dict = {}
+    environments_list = []
     variants_dict = {}
     relations_list = []
 
@@ -660,11 +664,11 @@ def process_interface_tree(ft):
             collision_list.append(command_signature)
 
         if stanza_type == "class":
-            add_class(stanza_name, command_stanza, classes_dict,
-                      environments_dict, commands_dict, relations_list)
+            add_class(stanza_name, command_stanza, classes_list,
+                      environments_list, commands_dict, relations_list)
         elif stanza_type == "environment":
             add_environment(
-                stanza_name, command_stanza, environments_dict, commands_dict, relations_list)
+                stanza_name, command_stanza, environments_list, commands_dict, relations_list)
         elif stanza_type == "command":
             add_command(stanza_name, command_stanza, commands_dict)
         elif stanza_type == "variant":
@@ -676,7 +680,7 @@ def process_interface_tree(ft):
     # env_related_dict = generate_env_related_dict(
     #     env_related_dict, commands_dict)
 
-    return commands_dict, variants_dict, classes_dict, environments_dict, relations_list
+    return commands_dict, variants_dict, classes_list, environments_list, relations_list
 
 # --- Topic Building Functions ---
 
@@ -1360,6 +1364,79 @@ def generate_dita_topic(topic_data):
     return topic
 
 
+def generate_environment_topic(environment_name):
+    topic = etree.Element(
+        'concept', id=f"r_command_{environment_name}")
+
+    attr = topic.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{environment_name}"
+    keyword_element.tail = " Environment"
+
+    title_element = etree.Element('title')
+    title_element.text = "The "
+    title_element.append(keyword_element)
+    topic.append(title_element)
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{environment_name}"
+    keyword_element.tail = " environment..."
+
+    shortdesc_element = etree.Element('shortdesc', rev='0')
+    shortdesc_element.text = "The "
+    shortdesc_element.append(keyword_element)
+    topic.append(shortdesc_element)
+
+    conbody_element_string = """<conbody>
+    <section>
+      <p></p>
+    </section>
+  </conbody>
+    """
+
+    topic.append(etree.fromstring(conbody_element_string))
+
+    return topic
+
+
+def generate_class_topic(class_name):
+    topic = etree.Element('concept', id=f"c_class_{class_name}")
+
+    attr = topic.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{class_name}"
+    keyword_element.tail = " Class"
+
+    title_element = etree.Element('title')
+    title_element.text = "The "
+    title_element.append(keyword_element)
+    topic.append(title_element)
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{class_name}"
+    keyword_element.tail = " class..."
+
+    shortdesc_element = etree.Element('shortdesc', rev='0')
+    shortdesc_element.text = "The "
+    shortdesc_element.append(keyword_element)
+    topic.append(shortdesc_element)
+
+    conbody_element_string = """<conbody>
+    <section>
+      <p></p>
+    </section>
+  </conbody>
+    """
+
+    topic.append(etree.fromstring(conbody_element_string))
+
+    return topic
+
+
 # --- Dealing With Output
 
 def make_output_dirs(base_path, lang):
@@ -1375,8 +1452,8 @@ def make_output_dirs(base_path, lang):
 
     focus_path = base_path / lang
 
-    topic_areas = ["commands", "frontmatter", "glossary",
-                   "out", "placeholders", "support", "temp", ]
+    topic_areas = ["commands", "classes", "environments", "frontmatter", "glossary",
+                   "out", "arguments", "support", "temp", ]
 
     for directory in topic_areas:
         topic_area = focus_path / directory
@@ -1391,6 +1468,46 @@ def make_output_dirs(base_path, lang):
 
 def import_manually_edited_topics(met_path, build_path):
     copy_tree(str(met_path), str(build_path), update=1)
+
+
+def write_class_topic(class_topic, name, path):
+
+    filename = path / "classes" / f"c_class_{name}.dita"
+
+    output_bytes = etree.tostring(class_topic,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
+def write_environment_topic(environment_topic, name, path):
+
+    filename = path / "environments" / f"c_environment_{name}.dita"
+
+    output_bytes = etree.tostring(environment_topic,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
 
 
 def write_command_topic(topic_element, name, path):
@@ -1464,14 +1581,14 @@ def get_reltable_width(related_list):
 def write_related_ditamap(related_list, path):
 
     reltable_width = get_reltable_width(related_list)
-    inheritance_map = etree.Element('map')
-    attr = inheritance_map.attrib
+    relationship_map = etree.Element('map')
+    attr = relationship_map.attrib
     attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
 
     title_element = etree.Element('title')
-    title_element.text = "Command Inheritance"
+    title_element.text = "Command Relationships"
 
-    inheritance_map.append(etree.Comment(
+    relationship_map.append(etree.Comment(
         "Reltable for related commands: each row with as many cells needed for all of the related commands to that particular command."))
 
     reltable_element = etree.Element('reltable')
@@ -1529,11 +1646,75 @@ def write_related_ditamap(related_list, path):
 
         reltable_element.append(relrow_element)
 
-    inheritance_map.append(reltable_element)
+    relationship_map.append(reltable_element)
 
     filename = path / "relations.ditamap"
 
-    output_bytes = etree.tostring(inheritance_map,
+    output_bytes = etree.tostring(relationship_map,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
+def write_environments_ditamap(environments_list, path):
+    environments_map = etree.Element('map')
+    attr = environments_map.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    title_element = etree.Element('title')
+    title_element.text = "Environments"
+    environments_map.append(title_element)
+
+    for environment in sorted(environments_list):
+        topicref_element = etree.Element(
+            'topicref', keys=f"environment_{environment}", href=f"commands/c_environment_{environment}.dita")
+        environments_map.append(topicref_element)
+
+    filename = path / "environments.ditamap"
+
+    output_bytes = etree.tostring(environments_map,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
+def write_classes_ditamap(classes_list, path):
+    classes_map = etree.Element('map')
+    attr = classes_map.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    title_element = etree.Element('title')
+    title_element.text = "Classes"
+    classes_map.append(title_element)
+
+    for cmd_class in sorted(classes_list):
+        topicref_element = etree.Element(
+            'topicref', keys=f"class_{cmd_class}", href=f"commands/c_class_{cmd_class}.dita")
+        classes_map.append(topicref_element)
+
+    filename = path / "classes.ditamap"
+
+    output_bytes = etree.tostring(classes_map,
                                   pretty_print=True,
                                   xml_declaration=True,
                                   encoding='UTF-8',
@@ -1559,9 +1740,9 @@ def write_command_ditamap(command_list, path, map_filename, map_title):
     command_map.append(title_element)
 
     for command in sorted(command_list):
-        keydef_element = etree.Element(
+        topicref_element = etree.Element(
             'topicref', keys=f"command_{command}", href=f"commands/{command[0]}/r_command_{command}.dita")
-        command_map.append(keydef_element)
+        command_map.append(topicref_element)
 
     filename = path / map_filename
 
@@ -1603,13 +1784,13 @@ if __name__ == "__main__":
 
     print("Processing interface file.")
 
-    commands_dict, variants_dict, classes_dict, environments_dict, relations_list = process_interface_tree(
+    commands_dict, variants_dict, classes_list, environments_list, relations_list = process_interface_tree(
         full_tree)
 
     # TODO remove after debugging
-    print("## reltable Data Structure")
+    print("## classes Data Structure")
     pp = pprint.PrettyPrinter(indent=2)
-    pp.pprint(relations_list)
+    pp.pprint(classes_list)
 
     if args['all']:
 
@@ -1635,6 +1816,8 @@ if __name__ == "__main__":
 
         print("Writing topic files.")
 
+        print("Writing command topics.")
+
         # for num, (command_name, command_data) in enumerate(commands_dict.items()):
         #     logger.info(f"{num:04}: Processing {command_data['name']}...")
 
@@ -1650,9 +1833,20 @@ if __name__ == "__main__":
 
         #     write_command_topic(xml_topic, command_name, focus_path)
 
+        # write env topics here
+        print("Writing class topics.")
+        for cmd_class in classes_list:
+            write_class_topic(generate_class_topic(
+                cmd_class), cmd_class, focus_path)
+
+        print("Writing environment topics.")
+        for environment in environments_list:
+            write_environment_topic(generate_environment_topic(
+                environment), environment, focus_path)
+
         print("Writing maps.")
 
-        # write_inheritance_ditamap(donor_set, focus_path)
+        write_inheritance_ditamap(donor_set, focus_path)
 
         write_related_ditamap(relations_list, focus_path)
 
@@ -1671,6 +1865,10 @@ if __name__ == "__main__":
         #                       "user_commands.xml", "User Commands")
         # write_command_ditamap(system_topics_list, focus_path,
         #                       "system_commands.xml", "System Commands")
+
+        write_classes_ditamap(classes_list, focus_path)
+
+        write_environments_ditamap(environments_list, focus_path)
 
         print("Importing manually edited topics.")
 

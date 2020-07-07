@@ -337,36 +337,6 @@ def list_of_commands(tr, nsp):
     return result
 
 
-def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False, begin_string="", is_end=False, end_string=""):
-    # We're not using this TODO remove
-    if is_begin:
-        command_name = begin_string + command_name
-    elif is_end:
-        command_name = end_string + command_name
-
-    if command_name in this_dict:
-        logger.debug(
-            f"Warning! Attempting to clobber entry for {command_name}!")
-    else:
-        this_dict[command_name] = generate_command_data(
-            command_name, command_stanza)
-
-    if is_end:
-        this_dict[command_name]['arguments'] = []
-
-# TODO fix this for the new relationships logic
-# def generate_env_related_dict(env_related_dict, commands_dict):
-
-#     prefixes = ['start', 'stop', 'setup', 'define']
-
-#     for stem in env_related_dict:
-#         for pre in prefixes:
-#             if pre + stem in commands_dict:
-#                 env_related_dict[stem].append(pre + stem)
-
-#     return env_related_dict
-
-
 def process_variant(stanza_name, stanza):
 
     variant_type = stanza.get('variant')

@@ -776,7 +776,7 @@ def add_topic_refbody_settings(argument_data):
                     ph_element = etree.Element('ph')
                     ph_element.text = " (Inherits from "
                     xref_element = etree.Element(
-                        'xref', href=f"../{k['donor'][0]}/r_command_{k['donor']}.dita")
+                        'xref', keyref=f"command_{k['donor']}")
                     xref_element.tail = ")"
                     ph_element.append(xref_element)
                     table_head_title_entry.append(ph_element)
@@ -919,8 +919,10 @@ def add_topic_refbody_settings(argument_data):
         settings_table_element[0].attrib['id'] = f"{argument_data['name']}_entry"
 
     for donor in settings_donors:
+        # donor_xref_element = etree.Element(
+        #     'xref', href=f"../../{get_command_url(donor)}")
         donor_xref_element = etree.Element(
-            'xref', href=f"../../{get_command_url(donor)}")
+            'xref', keyref=f"command_{donor}")
         donor_xref_element.tail = "."
         note_element = etree.Element('note')
         note_element.text = "Inherits settings from "
@@ -928,8 +930,10 @@ def add_topic_refbody_settings(argument_data):
         settings_section_element.append(note_element)
 
     for donor in options_donors:
+        # donor_xref_element = etree.Element(
+        #     'xref', href=f"../../{get_command_url(donor)}")
         donor_xref_element = etree.Element(
-            'xref', href=f"../../{get_command_url(donor)}")
+            'xref', keyref=f"command_{donor}")
         donor_xref_element.tail = "."
         note_element = etree.Element('note')
         note_element.text = "Inherits options from "
@@ -1037,8 +1041,10 @@ def add_topic_refbody_options(argument_data):
     options_section_element.append(options_table_element)
 
     for donor in options_donors:
+        # donor_xref_element = etree.Element(
+        #     'xref', href=f"../../{get_command_url(donor)}")
         donor_xref_element = etree.Element(
-            'xref', href=f"../../{get_command_url(donor)}")
+            'xref', keyref=f"command_{donor}")
         donor_xref_element.tail = "."
         note_element = etree.Element('note')
         note_element.text = "Inherits options from "

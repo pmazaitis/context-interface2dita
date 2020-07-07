@@ -395,7 +395,6 @@ def add_environment(stanza_name, stanza, environments_list, commands_dict, relat
 def add_class(stanza_name, stanza, classes_list,
               environments_list, commands_dict, relations_list):
 
-    # TODO - dict of class instances, list of instances, some instances cna be envs
     class_relations = {}
     class_relations['name'] = stanza_name
     class_relations['instances'] = []
@@ -1583,6 +1582,7 @@ def write_related_ditamap(related_list, path):
             print(f"Found environment")
             relcell_element = etree.Element('relcell')
             relcell_element.attrib['collection-type'] = "family"
+            # TODO We don't want to do this here?
             topicref_element = etree.Element(
                 'topicref', keyref=f"environment_{row['stem']}")
             relcell_element.append(topicref_element)
@@ -1596,6 +1596,12 @@ def write_related_ditamap(related_list, path):
 
         elif 'name' in row:
             print(f"Found class")
+            relcell_element = etree.Element('relcell')
+            topicref_element = etree.Element(
+                'topicref', keyref=f"class_{row['name']}")
+            relcell_element.append(topicref_element)
+            relrow_element.append(relcell_element)
+
             for instance in row['instances']:
                 # Make a relcell
                 relcell_element = etree.Element('relcell')
@@ -1608,6 +1614,9 @@ def write_related_ditamap(related_list, path):
                 elif type(instance) == dict:
                     relcell_element = etree.Element('relcell')
                     relcell_element.attrib['collection-type'] = "family"
+                    topicref_element = etree.Element(
+                        'topicref', keyref=f"environment_{instance['stem']}")
+                    relcell_element.append(topicref_element)
                     for member in instance['members']:
                         topicref_element = etree.Element(
                             'topicref', keyref=f"command_{member}")

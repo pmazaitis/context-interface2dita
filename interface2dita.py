@@ -61,7 +61,7 @@ def generate_settings_keys(argument):
 
     keys = []
 
-    # each of the keys can be an option inheritance, a simple value, or a placeholder
+    # each of the keys can be an option inheritance, a simple value, or a argument
 
     for value in argument:
 
@@ -100,7 +100,7 @@ def generate_settings(argument):
     # one set of assignments
 
     # settings key=value can be inherited as a whole, or have children
-    # if articulated, settings keys can be an option inheritance, a simple value, or a placeholder
+    # if articulated, settings keys can be an option inheritance, a simple value, or a argument
 
     for value in argument:
 
@@ -136,7 +136,7 @@ def generate_settings(argument):
 def generate_options(argument):
     options = []
 
-    # Option values can be of one of three types: an inheritance, a simple value, or a placeholder
+    # Option values can be of one of three types: an inheritance, a simple value, or a argument
 
     for value in argument:
 
@@ -354,7 +354,7 @@ def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False,
     if is_end:
         this_dict[command_name]['arguments'] = []
 
-
+# TODO fix this for the new relationships logic
 # def generate_env_related_dict(env_related_dict, commands_dict):
 
 #     prefixes = ['start', 'stop', 'setup', 'define']
@@ -840,9 +840,9 @@ def add_topic_refbody_settings(argument_data):
                     table_row_element.append(keyword_entry_element)
 
                     keyword_desc_element = etree.Element('entry')
-                    placeholder_desc_element = etree.Element(
-                        'ph', conkeyref=f"{k['text']}/placeholder_desc")
-                    keyword_desc_element.append(placeholder_desc_element)
+                    argument_desc_element = etree.Element(
+                        'ph', conkeyref=f"{k['text']}/argument_desc")
+                    keyword_desc_element.append(argument_desc_element)
                     table_row_element.append(keyword_desc_element)
 
                 elif k['type'] == "simple":
@@ -1005,9 +1005,9 @@ def add_topic_refbody_options(argument_data):
             table_row_element.append(keyword_entry_element)
 
             keyword_desc_element = etree.Element('entry')
-            placeholder_desc_element = etree.Element(
-                'ph', conkeyref=f"{c['text']}/placeholder_desc")
-            keyword_desc_element.append(placeholder_desc_element)
+            argument_desc_element = etree.Element(
+                'ph', conkeyref=f"{c['text']}/argument_desc")
+            keyword_desc_element.append(argument_desc_element)
             table_row_element.append(keyword_desc_element)
 
         elif c['type'] == "simple":
@@ -1059,9 +1059,9 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
         'xref', keyref=this_argument['type'], type="reference")
     name_entry_element.append(placeholder_name_element)
 
-    placeholder_desc_element = etree.Element(
-        'ph', conkeyref=f"{this_argument['type']}/placeholder_desc")
-    desc_entry_element.append(placeholder_desc_element)
+    argument_desc_element = etree.Element(
+        'ph', conkeyref=f"{this_argument['type']}/argument_desc")
+    desc_entry_element.append(argument_desc_element)
 
     if this_argument['type'] == "OPTIONS":
         # This is the complicated one; we want to actually include a short list of options here
@@ -1136,7 +1136,7 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
 
     else:
         placeholder_vals_element = etree.Element(
-            'ph', conkeyref=f"{this_argument['type']}/placeholder_value")
+            'ph', conkeyref=f"{this_argument['type']}/argument_value")
         vals_entry_element.append(placeholder_vals_element)
 
     row_element.append(name_entry_element)

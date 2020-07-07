@@ -20327,10 +20327,10 @@
         <cd:command category="layout" file="page-run.mkiv" level="document" name="showprint">
             <cd:arguments>
                 <cd:keywords list="yes" optional="yes">
-                    <cd:inherit name="setuppapersize" />
+                    <cd:inherit name="setuppapersizeoptions" />
                 </cd:keywords>
                 <cd:keywords list="yes" optional="yes">
-                    <cd:inherit name="setuppapersize" />
+                    <cd:inherit name="setuppapersizeoptions" />
                 </cd:keywords>
                 <cd:assignments list="yes" optional="yes">
                     <cd:inherit name="setuplayout" />
@@ -28971,7 +28971,7 @@
                 </cd:assignments>
             </cd:arguments>
         </cd:command>
-        <cd:command category="layout" file="page-lay.mkiv" level="style" name="definepapersize" variant="name">
+        <cd:command category="layout" file="page-lay.mkiv" level="style" name="definepapersizeoptions">
             <cd:arguments>
                 <cd:keywords>
                     <cd:constant type="cd:name" />
@@ -28984,7 +28984,7 @@
                 </cd:keywords>
             </cd:arguments>
         </cd:command>
-        <cd:command category="layout" file="page-lay.mkiv" level="style" name="setuppapersizeoptions" variant="name">
+        <cd:command category="layout" file="page-lay.mkiv" level="style" name="setuppapersizeoptions">
             <cd:arguments>
                 <cd:keywords list="yes" optional="yes">
                     <cd:constant type="reset" />

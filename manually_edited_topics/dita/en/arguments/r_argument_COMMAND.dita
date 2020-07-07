@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="r_argument_COMMAND" xml:lang="en">
+    <title>COMMAND</title>
+    <shortdesc><ph id="argument_desc">A <term>COMMAND</term> is any ConTeXt command.</ph><ph id="argument_value">Use values for <term>COMMAND</term> that are a valid ConTeXt command.</ph></shortdesc>
+    <refbody>
+        <section>
+            <p>Include example here for inclusion?</p>
+        </section>
+    </refbody>
+</reference>

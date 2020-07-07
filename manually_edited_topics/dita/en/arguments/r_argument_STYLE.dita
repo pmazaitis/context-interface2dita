@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="r_argument_STYLE">
+    <title>STYLE</title>
+    <shortdesc><ph id="argument_desc">The <term>STYLE</term> is a kind of thing.</ph> <ph id="argument_value">Use values for <term>STYLE</term> that...</ph></shortdesc>
+    <refbody>
+        <section>
+            <p>Examples and other supporting information for transclusion.</p>
+        </section>
+    </refbody>
+</reference>

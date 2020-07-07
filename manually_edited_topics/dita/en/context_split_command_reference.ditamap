@@ -23,6 +23,8 @@
             <topicref href="frontmatter/c_example_of_extending_a_command.dita"/>
             <topicref href="frontmatter/c_extendable_commands.dita"/>
         </topicref>
+    <mapref href="classes.ditamap" format="ditamap"/>
+    <mapref href="environments.ditamap" format="ditamap"/>
     </topichead>
     <topichead navtitle="User Commands">
         <mapref href="user_commands.ditamap" format="ditamap"/>
@@ -31,7 +33,7 @@
         <mapref href="system_commands.ditamap" format="ditamap"/>
     </topichead>
     <topichead navtitle="Appendices">
-        <mapref href="placeholders.ditamap" format="ditamap"/>
+        <mapref href="arguments.ditamap" format="ditamap"/>
         <mapref href="glossary.ditamap" format="ditamap"/>
     </topichead>
     <mapref href="relations.ditamap" format="ditamap"/>

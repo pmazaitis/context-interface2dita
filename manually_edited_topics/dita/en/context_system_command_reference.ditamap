@@ -25,9 +25,11 @@
             <topicref href="frontmatter/c_extendable_commands.dita"/>
         </topicref>
     </topichead>
+    <mapref href="classes.ditamap" format="ditamap"/>
+    <mapref href="environments.ditamap" format="ditamap"/>
     <mapref href="system_commands.ditamap" format="ditamap"/>
     <topichead navtitle="Appendices">
-        <mapref href="placeholders.ditamap" format="ditamap"/>
+        <mapref href="arguments.ditamap" format="ditamap"/>
         <mapref href="glossary.ditamap" format="ditamap"/>
     </topichead>
     

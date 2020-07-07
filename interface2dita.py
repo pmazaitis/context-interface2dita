@@ -79,7 +79,7 @@ def generate_settings_keys(argument):
         elif value.tag == "{http://www.pragma-ade.com/commands}constant":
             # (f"Found key name of {value.get('type')}")
             if "cd:" in value.get('type'):
-                this_key['type'] = "placeholder"
+                this_key['type'] = "argument"
                 this_key['text'] = value.get('type')[3:].upper()
             else:
                 this_key['type'] = "simple"
@@ -145,7 +145,7 @@ def generate_options(argument):
         if value.tag == "{http://www.pragma-ade.com/commands}constant":
             # print(f"Found constant with type {value.get('type')}")
             if "cd:" in value.get('type'):
-                this_option['type'] = "placeholder"
+                this_option['type'] = "argument"
                 this_option['text'] = value.get('type')[3:].upper()
             else:
                 this_option['type'] = "simple"
@@ -801,12 +801,12 @@ def add_topic_refbody_settings(argument_data):
                     table_row_element = etree.fromstring(
                         inheritance_element_string)
 
-                elif k['type'] == "placeholder":
+                elif k['type'] == "argument":
                     table_row_element = etree.Element('row')
                     keyword_entry_element = etree.Element('entry')
-                    placeholder_name_element = etree.Element(
+                    argument_name_element = etree.Element(
                         'xref', keyref=k['text'], type="reference")
-                    keyword_entry_element.append(placeholder_name_element)
+                    keyword_entry_element.append(argument_name_element)
                     table_row_element.append(keyword_entry_element)
 
                     keyword_desc_element = etree.Element('entry')
@@ -970,12 +970,12 @@ def add_topic_refbody_options(argument_data):
 
             table_row_element = etree.fromstring(inheritance_element_string)
 
-        elif c['type'] == "placeholder":
+        elif c['type'] == "argument":
             table_row_element = etree.Element('row')
             keyword_entry_element = etree.Element('entry')
-            placeholder_name_element = etree.Element(
+            argument_name_element = etree.Element(
                 'xref', keyref=c['text'], type="reference")
-            keyword_entry_element.append(placeholder_name_element)
+            keyword_entry_element.append(argument_name_element)
             table_row_element.append(keyword_entry_element)
 
             keyword_desc_element = etree.Element('entry')
@@ -1031,9 +1031,9 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
     desc_entry_element = etree.Element('stentry')
     vals_entry_element = etree.Element('stentry')
 
-    placeholder_name_element = etree.Element(
+    argument_name_element = etree.Element(
         'xref', keyref=this_argument['type'], type="reference")
-    name_entry_element.append(placeholder_name_element)
+    name_entry_element.append(argument_name_element)
 
     argument_desc_element = etree.Element(
         'ph', conkeyref=f"{this_argument['type']}/argument_desc")
@@ -1056,20 +1056,20 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
                 row_element.append(etree.Element('stentry'))
                 row_element.append(etree.Element('stentry'))
                 return row_element
-            elif c['default'] == True and c['type'] == "placeholder":
-                placeholder_name_element = etree.Element(
+            elif c['default'] == True and c['type'] == "argument":
+                argument_name_element = etree.Element(
                     'xref', keyref=c['text'], type="reference")
                 default_phrase = etree.Element('ph', importance="default")
-                default_phrase.append(placeholder_name_element)
+                default_phrase.append(argument_name_element)
                 vals_entry_element.append(default_phrase)
                 current_element = default_phrase
                 current_element.tail = ", "
                 in_tail = True
-            elif c['type'] == "placeholder":
-                placeholder_name_element = etree.Element(
+            elif c['type'] == "argument":
+                argument_name_element = etree.Element(
                     'xref', keyref=c['text'], type="reference")
-                vals_entry_element.append(placeholder_name_element)
-                current_element = placeholder_name_element
+                vals_entry_element.append(argument_name_element)
+                current_element = argument_name_element
                 current_element.tail = ", "
                 in_tail = True
             elif c['default'] == True:
@@ -1111,9 +1111,9 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
         vals_entry_element.text = "\\" + this_argument['name']
 
     else:
-        placeholder_vals_element = etree.Element(
+        argument_vals_element = etree.Element(
             'ph', conkeyref=f"{this_argument['type']}/argument_value")
-        vals_entry_element.append(placeholder_vals_element)
+        vals_entry_element.append(argument_vals_element)
 
     row_element.append(name_entry_element)
     row_element.append(desc_entry_element)
@@ -1653,7 +1653,7 @@ def write_environments_ditamap(environments_list, path):
 
     for environment in sorted(environments_list):
         topicref_element = etree.Element(
-            'topicref', keys=f"environment_{environment}", href=f"commands/c_environment_{environment}.dita")
+            'topicref', keys=f"environment_{environment}", href=f"environments/c_environment_{environment}.dita")
         environments_map.append(topicref_element)
 
     filename = path / "environments.ditamap"
@@ -1685,7 +1685,7 @@ def write_classes_ditamap(classes_list, path):
 
     for cmd_class in sorted(classes_list):
         topicref_element = etree.Element(
-            'topicref', keys=f"class_{cmd_class}", href=f"commands/c_class_{cmd_class}.dita")
+            'topicref', keys=f"class_{cmd_class}", href=f"classes/c_class_{cmd_class}.dita")
         classes_map.append(topicref_element)
 
     filename = path / "classes.ditamap"

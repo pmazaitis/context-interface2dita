@@ -1847,7 +1847,7 @@ if __name__ == "__main__":
 
         print("Importing manually edited topics.")
 
-        # import_manually_edited_topics(manual_topics_path, build_path)
+        import_manually_edited_topics(manual_topics_path, build_path)
 
         print("Done.")
 

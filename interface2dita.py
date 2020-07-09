@@ -1126,7 +1126,7 @@ def add_topic_refbody_refsyn_simpletable(topic_data):
 
     simpletable_header_string = """
                     <sthead>
-          <stentry>Name</stentry>
+          <stentry>Argument</stentry>
           <stentry>Description</stentry>
           <stentry>Values</stentry>
         </sthead>"""

@@ -651,6 +651,47 @@ def process_interface_tree(ft):
 
     return commands_dict, variants_dict, classes_list, environments_list, relations_list
 
+
+def add_supporting_env_commands(relations_list, commands_dict):
+
+    transformation_map = {
+        'definefloats': 'definefloat',
+        'definebox': 'definehbox',
+        'definectxfunction': 'installctxfunction',
+        'definectxfunctiondefinition':  'startctxfunctiondefintion',
+        'definefence': 'definemathfence',
+        'definelabel': 'definelabelclass',
+        'definelanguage': 'installlanguage',
+        'definesynonym': 'definesynonyms',
+        'definesorts': 'definesorting',
+    }
+
+    for relation in relations_list:
+        if 'stem' in relation:
+            setup_command = "setup" + relation['stem']
+            if setup_command in commands_dict:
+                relation['members'].append(setup_command)
+
+            define_command = "define" + relation['stem']
+            if define_command in transformation_map:
+                define_command = transformation_map[define_command]
+            if define_command in commands_dict:
+                relation['members'].append(define_command)
+        if 'instances' in relation:
+            for instance in relation['instances']:
+                if 'stem' in instance:
+                    setup_command = "setup" + instance['stem']
+                    if setup_command in commands_dict:
+                        instance['members'].append(setup_command)
+
+                    define_command = "define" + instance['stem']
+                    if define_command in transformation_map:
+                        define_command = transformation_map[define_command]
+                    if define_command in commands_dict:
+                        instance['members'].append(define_command)
+
+    return relations_list
+
 # --- Topic Building Functions ---
 
 
@@ -1577,12 +1618,11 @@ def write_related_ditamap(related_list, path):
 
     for row in related_list:
         relrow_element = etree.Element('relrow')
-        print(row)
+        # print(row)
         if 'stem' in row:
-            print(f"Found environment")
+            # print(f"Found environment")
             relcell_element = etree.Element('relcell')
             relcell_element.attrib['collection-type'] = "family"
-            # TODO We don't want to do this here?
             topicref_element = etree.Element(
                 'topicref', keyref=f"environment_{row['stem']}")
             relcell_element.append(topicref_element)
@@ -1595,7 +1635,7 @@ def write_related_ditamap(related_list, path):
                 relrow_element.append(etree.Element('relcell'))
 
         elif 'name' in row:
-            print(f"Found class")
+            # print(f"Found class")
             relcell_element = etree.Element('relcell')
             topicref_element = etree.Element(
                 'topicref', keyref=f"class_{row['name']}")
@@ -1772,10 +1812,7 @@ if __name__ == "__main__":
     commands_dict, variants_dict, classes_list, environments_list, relations_list = process_interface_tree(
         full_tree)
 
-    # TODO remove after debugging
-    print("## classes Data Structure")
-    pp = pprint.PrettyPrinter(indent=2)
-    pp.pprint(classes_list)
+    relations_dict = add_supporting_env_commands(relations_list, commands_dict)
 
     if args['all']:
 
@@ -1886,6 +1923,16 @@ if __name__ == "__main__":
 
     elif args['test']:
         print("Data generated.")
+
+        # TODO remove after debugging
+        # print("## classes Data Structure")
+        # pp = pprint.PrettyPrinter(indent=2)
+        # pp.pprint(classes_list)
+
+        # TODO remove after debugging
+        print("## Relations Data Structure")
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint(relations_list)
     else:
         print("No action taken")
 

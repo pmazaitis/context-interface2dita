@@ -656,6 +656,7 @@ def add_supporting_env_commands(relations_list, commands_dict):
 
     transformation_map = {
         'definefloats': 'definefloat',
+        'setupfloats': 'setupfloat',
         'definebox': 'definehbox',
         'definectxfunction': 'installctxfunction',
         'definectxfunctiondefinition':  'startctxfunctiondefintion',
@@ -664,6 +665,8 @@ def add_supporting_env_commands(relations_list, commands_dict):
         'definelanguage': 'installlanguage',
         'definesynonym': 'definesynonyms',
         'definesorts': 'definesorting',
+        'definesection': 'definehead',
+        'setupsection': 'setuphead',
     }
 
     for relation in relations_list:
@@ -674,10 +677,25 @@ def add_supporting_env_commands(relations_list, commands_dict):
 
             define_command = "define" + relation['stem']
             if define_command in transformation_map:
+                print(
+                    f"#### Transforming {define_command} to {transformation_map[define_command]}")
                 define_command = transformation_map[define_command]
             if define_command in commands_dict:
                 relation['members'].append(define_command)
-        if 'instances' in relation:
+
+        if 'name' in relation:
+            setup_command = "setup" + relation['name']
+            if setup_command in commands_dict:
+                relation['instances'].append(setup_command)
+
+            define_command = "define" + relation['name']
+            if define_command in transformation_map:
+                print(
+                    f"#### Transforming {define_command} to {transformation_map[define_command]}")
+                define_command = transformation_map[define_command]
+            if define_command in commands_dict:
+                relation['instances'].append(define_command)
+
             for instance in relation['instances']:
                 if 'stem' in instance:
                     setup_command = "setup" + instance['stem']
@@ -686,7 +704,10 @@ def add_supporting_env_commands(relations_list, commands_dict):
 
                     define_command = "define" + instance['stem']
                     if define_command in transformation_map:
+                        print(
+                            f"#### Transforming {define_command} to {transformation_map[define_command]}")
                         define_command = transformation_map[define_command]
+
                     if define_command in commands_dict:
                         instance['members'].append(define_command)
 

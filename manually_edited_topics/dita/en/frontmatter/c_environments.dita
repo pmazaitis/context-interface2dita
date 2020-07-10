@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="environments" xml:lang="en">
+    <title>Command Environments</title>
+    <shortdesc>
+        Command environments are sets of related commands used with a type of content.</shortdesc>
+    <conbody>
+        <p> </p>
+    </conbody>
+</concept>

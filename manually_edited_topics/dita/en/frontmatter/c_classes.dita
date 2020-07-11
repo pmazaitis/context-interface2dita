@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">
+<concept id="command_classes" xml:lang="en">
+    <title>Command Classes</title>
+    <shortdesc><ph keyref="definitions/product_name"/> supports command <keyword>classes</keyword>.
+        Command classes can be used to create instances of a command class. Instances customize
+        command behavior in a structured way. </shortdesc>
+    <conbody>
+        <p> </p>
+    </conbody>
+</concept>

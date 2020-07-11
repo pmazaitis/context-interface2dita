@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DITA Reference//EN" "reference.dtd">
+<reference id="r_argument_NAME" xml:lang="en">
+    <title>NAME</title>
+    <shortdesc><ph id="argument_desc">A <term>NAME</term> is used as a label for referencing content.</ph><ph id="argument_value">Use <term>NAME</term>s that clearly and unambiguously identify the content.</ph></shortdesc>
+    <refbody> 
+        <section>
+        <p>Include example here for inclusion?</p>
+        </section>
+    </refbody>
+</reference>

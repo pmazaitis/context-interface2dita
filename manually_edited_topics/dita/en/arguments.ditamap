@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">
+<map xml:lang="en">
+    <title>Arguments</title>
+    
+    <!-- Keys for every placeholder we may want to use -->
+    <keydef keys="APPLY" href="arguments/r_argument_APPLY.dita"/>
+    <keydef keys="AULT" href="arguments/r_argument_AULT.dita"/>
+    <keydef keys="BUFFER" href="arguments/r_argument_BUFFER.dita"/>
+    <keydef keys="CATEGORY" href="arguments/r_argument_CATEGORY.dita"/>
+    <keydef keys="CHARACTER" href="arguments/r_argument_CHARACTER.dita"/>
+    <keydef keys="COMMAND" href="arguments/r_argument_COMMAND.dita"/>
+    <keydef keys="CONTENT" href="arguments/r_argument_CONTENT.dita"/>
+    <keydef keys="COLOR" href="arguments/r_argument_COLOR.dita"/>
+    <keydef keys="CSNAME" href="arguments/r_argument_CSNAME.dita"/>
+    <keydef keys="D" href="arguments/r_argument_D.dita"/>
+    <keydef keys="E" href="arguments/r_argument_E.dita"/>
+    <keydef keys="DELIMITER" href="arguments/r_argument_DELIMITER.dita"/>
+    <keydef keys="DIMENSION" href="arguments/r_argument_DIMENSION.dita"/>
+    <keydef keys="FILENAME" href="arguments/r_argument_FILENAME.dita"/>
+    <keydef keys="FALSE" href="arguments/r_argument_FALSE.dita"/>
+    <keydef keys="FILE" href="arguments/r_argument_FILE.dita"/>
+    <keydef keys="FIRST" href="arguments/r_argument_FIRST.dita"/>
+    <keydef keys="FONT" href="arguments/r_argument_FONT.dita"/>
+    <keydef keys="HTEXT" href="arguments/r_argument_HTEXT.dita"/>
+    <keydef keys="IDENTIFIER" href="arguments/r_argument_IDENTIFIER.dita"/>
+    <keydef keys="INDEX" href="arguments/r_argument_INDEX.dita"/>
+    <keydef keys="KEY" href="arguments/r_argument_KEY.dita"/>
+    <keydef keys="LABEL" href="arguments/r_argument_LABEL.dita"/>
+    <keydef keys="LANGUAGE" href="arguments/r_argument_LANGUAGE.dita"/>
+    <keydef keys="LAST" href="arguments/r_argument_LAST.dita"/>
+    <keydef keys="LIST" href="arguments/r_argument_LIST.dita"/>
+    <keydef keys="LPATH" href="arguments/r_argument_LPATH.dita"/>
+    <keydef keys="LUAFUNCTION" href="arguments/r_argument_LUAFUNCTION.dita"/>
+    <keydef keys="MARK" href="arguments/r_argument_MARK.dita"/>
+    <keydef keys="MATRIX" href="arguments/r_argument_MATRIX.dita"/>
+    <keydef keys="NAME" href="arguments/r_argument_NAME.dita"/>
+    <keydef keys="NK" href="arguments/r_argument_NK.dita"/>
+    <keydef keys="NUMBER" href="arguments/r_argument_NUMBER.dita"/>
+    <keydef keys="NODE" href="arguments/r_argument_NODE.dita"/>
+    <keydef keys="ONEARGUMENT" href="arguments/r_argument_ONEARGUMENT.dita"/>
+    <keydef keys="OPTIONS" href="arguments/r_argument_OPTIONS.dita"/>
+    <keydef keys="ORDINAL" href="arguments/r_argument_ORDINAL.dita"/>
+    <keydef keys="P" href="arguments/r_argument_P.dita"/>
+    <keydef keys="PATH" href="arguments/r_argument_PATH.dita"/>
+    <keydef keys="POSITION" href="arguments/r_argument_POSITION.dita"/>
+    <keydef keys="PLURAL" href="arguments/r_argument_PLURAL.dita"/>
+    <keydef keys="REFERENCE" href="arguments/r_argument_REFERENCE.dita"/>
+    <keydef keys="S" href="arguments/r_argument_S.dita"/>
+    <keydef keys="SCOPE" href="arguments/r_argument_SCOPE.dita"/>
+    <keydef keys="SETTINGS" href="arguments/r_argument_SETTINGS.dita"/>
+    <keydef keys="SUBTYPE" href="arguments/r_argument_SUBTYPE.dita"/>
+    <keydef keys="SWITCH" href="arguments/r_argument_SWITCH.dita"/>
+    <keydef keys="SECTION" href="arguments/r_argument_SECTION.dita"/>
+    <keydef keys="SETUP" href="arguments/r_argument_SETUP.dita"/>
+    <keydef keys="SINGULAR" href="arguments/r_argument_SINGULAR.dita"/>
+    <keydef keys="STRING" href="arguments/r_argument_STRING.dita"/>
+    <keydef keys="STYLE" href="arguments/r_argument_STYLE.dita"/>
+    <keydef keys="TEMPLATE" href="arguments/r_argument_TEMPLATE.dita"/>
+    <keydef keys="TEXT" href="arguments/r_argument_TEXT.dita"/>
+    <keydef keys="THREEARGUMENTS" href="arguments/r_argument_THREEARGUMENTS.dita"/>
+    <keydef keys="TINUE" href="arguments/r_argument_TINUE.dita"/>
+    <keydef keys="TYPE" href="arguments/r_argument_TYPE.dita"/>
+    <keydef keys="TRIPLET" href="arguments/r_argument_TRIPLET.dita"/>
+    <keydef keys="TRUE" href="arguments/r_argument_TRUE.dita"/>
+    <keydef keys="TWOARGUMENTS" href="arguments/r_argument_TWOARGUMENTS.dita"/>
+    <keydef keys="URL" href="arguments/r_argument_URL.dita"/>
+    <keydef keys="VALUE" href="arguments/r_argument_VALUE.dita"/>
+    <keydef keys="XMLSETUP" href="arguments/r_argument_XMLSETUP.dita"/>
+    
+    <!-- Refs for all of the arguments used in the map -->
+    
+    <topicref href="arguments/c_arguments.dita">
+        <topicref href="arguments/r_argument_APPLY.dita"/>
+        <topicref href="arguments/r_argument_AULT.dita"/>
+        <topicref href="arguments/r_argument_BUFFER.dita"/>
+        <topicref href="arguments/r_argument_CATEGORY.dita"/>
+        <topicref href="arguments/r_argument_CHARACTER.dita"/>
+        <topicref href="arguments/r_argument_COLOR.dita"/>
+        <topicref href="arguments/r_argument_COMMAND.dita"/>
+        <topicref href="arguments/r_argument_CONTENT.dita"/>
+        <topicref href="arguments/r_argument_CSNAME.dita"/>
+        <topicref href="arguments/r_argument_D.dita"/>
+        <topicref href="arguments/r_argument_DELIMITER.dita"/>
+        <topicref href="arguments/r_argument_DIMENSION.dita"/>
+        <topicref href="arguments/r_argument_E.dita"/>
+        <topicref href="arguments/r_argument_FALSE.dita"/>
+        <topicref href="arguments/r_argument_FILE.dita"/>
+        <topicref href="arguments/r_argument_FILENAME.dita"/>
+        <topicref href="arguments/r_argument_FIRST.dita"/>
+        <topicref href="arguments/r_argument_FONT.dita"/>
+        <topicref href="arguments/r_argument_HTEXT.dita"/>
+        <topicref href="arguments/r_argument_IDENTIFIER.dita"/>
+        <topicref href="arguments/r_argument_INDEX.dita"/>
+        <topicref href="arguments/r_argument_KEY.dita"/>
+        <topicref href="arguments/r_argument_KIND.dita"/>
+        <topicref href="arguments/r_argument_LABEL.dita"/>
+        <topicref href="arguments/r_argument_LANGUAGE.dita"/>
+        <topicref href="arguments/r_argument_LAST.dita"/>
+        <topicref href="arguments/r_argument_LIST.dita"/>
+        <topicref href="arguments/r_argument_LPATH.dita"/>
+        <topicref href="arguments/r_argument_LUAFUNCTION.dita"/>
+        <topicref href="arguments/r_argument_MARK.dita"/>
+        <topicref href="arguments/r_argument_MATRIX.dita"/>
+        <topicref href="arguments/r_argument_NAME.dita"/>
+        <topicref href="arguments/r_argument_NK.dita"/>
+        <topicref href="arguments/r_argument_NODE.dita"/>
+        <topicref href="arguments/r_argument_NUMBER.dita"/>
+        <topicref href="arguments/r_argument_ONEARGUMENT.dita"/>
+        <topicref href="arguments/r_argument_OPTIONS.dita"/>
+        <topicref href="arguments/r_argument_ORDINAL.dita"/>
+        <topicref href="arguments/r_argument_P.dita"/>
+        <topicref href="arguments/r_argument_PATH.dita"/>
+        <topicref href="arguments/r_argument_POSITION.dita"/>
+        <topicref href="arguments/r_argument_PLURAL.dita"/>
+        <topicref href="arguments/r_argument_REFERENCE.dita"/>
+        <topicref href="arguments/r_argument_S.dita"/>
+        <topicref href="arguments/r_argument_SCOPE.dita"/>
+        <topicref href="arguments/r_argument_SECTION.dita"/>
+        <topicref href="arguments/r_argument_SETTINGS.dita"/>
+        <topicref href="arguments/r_argument_SETUP.dita"/>
+        <topicref href="arguments/r_argument_SINGULAR.dita"/>
+        <topicref href="arguments/r_argument_STRING.dita"/>
+        <topicref href="arguments/r_argument_STYLE.dita"/>
+        <topicref href="arguments/r_argument_SUBTYPE.dita"/>
+        <topicref href="arguments/r_argument_SWITCH.dita"/>
+        <topicref href="arguments/r_argument_TEMPLATE.dita"/>
+        <topicref href="arguments/r_argument_TEXT.dita"/>
+        <topicref href="arguments/r_argument_THREEARGUMENTS.dita"/>
+        <topicref href="arguments/r_argument_TINUE.dita"/>
+        <topicref href="arguments/r_argument_TRIPLET.dita"/>
+        <topicref href="arguments/r_argument_TRUE.dita"/>
+        <topicref href="arguments/r_argument_TWOARGUMENTS.dita"/>
+        <topicref href="arguments/r_argument_TYPE.dita"/>
+        <topicref href="arguments/r_argument_URL.dita"/>
+        <topicref href="arguments/r_argument_VALUE.dita"/>
+        <topicref href="arguments/r_argument_XMLSETUP.dita"/>
+    </topicref>
+</map>

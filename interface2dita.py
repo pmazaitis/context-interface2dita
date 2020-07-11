@@ -61,7 +61,7 @@ def generate_settings_keys(argument):
 
     keys = []
 
-    # each of the keys can be an option inheritance, a simple value, or a placeholder
+    # each of the keys can be an option inheritance, a simple value, or a argument
 
     for value in argument:
 
@@ -79,7 +79,7 @@ def generate_settings_keys(argument):
         elif value.tag == "{http://www.pragma-ade.com/commands}constant":
             # (f"Found key name of {value.get('type')}")
             if "cd:" in value.get('type'):
-                this_key['type'] = "placeholder"
+                this_key['type'] = "argument"
                 this_key['text'] = value.get('type')[3:].upper()
             else:
                 this_key['type'] = "simple"
@@ -100,7 +100,7 @@ def generate_settings(argument):
     # one set of assignments
 
     # settings key=value can be inherited as a whole, or have children
-    # if articulated, settings keys can be an option inheritance, a simple value, or a placeholder
+    # if articulated, settings keys can be an option inheritance, a simple value, or a argument
 
     for value in argument:
 
@@ -136,7 +136,7 @@ def generate_settings(argument):
 def generate_options(argument):
     options = []
 
-    # Option values can be of one of three types: an inheritance, a simple value, or a placeholder
+    # Option values can be of one of three types: an inheritance, a simple value, or a argument
 
     for value in argument:
 
@@ -145,7 +145,7 @@ def generate_options(argument):
         if value.tag == "{http://www.pragma-ade.com/commands}constant":
             # print(f"Found constant with type {value.get('type')}")
             if "cd:" in value.get('type'):
-                this_option['type'] = "placeholder"
+                this_option['type'] = "argument"
                 this_option['text'] = value.get('type')[3:].upper()
             else:
                 this_option['type'] = "simple"
@@ -281,7 +281,8 @@ def generate_command_data(
         reported_category = False
 
     if reported_category:
-        keywords.append(reported_category)
+        for kw in reported_category.split():
+            keywords.append(kw)
 
     try:
         source_filename = command_stanza.get('file')
@@ -336,34 +337,236 @@ def list_of_commands(tr, nsp):
     return result
 
 
-def add_command_to_dict(this_dict, command_name, command_stanza, is_begin=False, begin_string="", is_end=False, end_string=""):
+def process_variant(stanza_name, stanza):
 
-    if is_begin:
-        command_name = begin_string + command_name
-    elif is_end:
-        command_name = end_string + command_name
+    variant_type = stanza.get('variant')
 
-    if command_name in this_dict:
+    print(
+        f" VARIANT - Noting variant for {stanza_name} with type {variant_type}...")
+
+
+def add_command(command_name, stanza, commands_dict, with_arguments=True):
+    print(
+        f" COMMAND - Adding command for {command_name}...(arguments: {with_arguments})")
+
+    if command_name in commands_dict:
         logger.debug(
             f"Warning! Attempting to clobber entry for {command_name}!")
     else:
-        this_dict[command_name] = generate_command_data(
-            command_name, command_stanza)
-
-    if is_end:
-        this_dict[command_name]['arguments'] = []
+        commands_dict[command_name] = generate_command_data(
+            command_name, stanza)
 
 
-def generate_env_related_dict(env_related_dict, commands_dict):
+def add_environment(stanza_name, stanza, environments_list, commands_dict, relations_list):
 
-    prefixes = ['start', 'stop', 'setup', 'define']
+    environment_relations = {}
+    environment_relations['stem'] = stanza_name
+    environment_relations['members'] = []
 
-    for stem in env_related_dict:
-        for pre in prefixes:
-            if pre + stem in commands_dict:
-                env_related_dict[stem].append(pre + stem)
+    print(
+        f" ENVIRON - Starting on environment {stanza_name}...")
 
-    return env_related_dict
+    if 'begin' in stanza.attrib:
+        env_start_string = stanza.attrib['begin']
+    else:
+        env_start_string = "start"
+
+    if 'end' in stanza.attrib:
+        env_stop_string = stanza.attrib['end'].encode(
+            "ascii", errors="ignore").decode()
+    else:
+        env_stop_string = "stop"
+
+    start_command_name = env_start_string + stanza_name
+    stop_command_name = env_stop_string + stanza_name
+
+    print(
+        f" ENVIRON - For the environment {stanza_name}, generating {start_command_name}, {stop_command_name}")
+    add_command(start_command_name, stanza, commands_dict)
+    environment_relations['members'].append(start_command_name)
+    add_command(stop_command_name, stanza, commands_dict, with_arguments=False)
+    environment_relations['members'].append(stop_command_name)
+
+    relations_list.append(environment_relations)
+    if stanza_name not in environments_list:
+        environments_list.append(stanza_name)
+
+
+def add_class(stanza_name, stanza, classes_list,
+              environments_list, commands_dict, relations_list):
+
+    class_relations = {}
+    class_relations['name'] = stanza_name
+    class_relations['instances'] = []
+
+    print(
+        f"   CLASS - Starting on class {stanza_name}...")
+
+    # First, do we have an environment
+    try:
+        stanza_type = stanza.attrib['type']
+    except:
+        stanza_type = False
+
+    # Do we have a pattern
+
+    sequence_elements = stanza.xpath(
+        'cd:sequence/*', namespaces=NSMAP)
+
+    # if stanza_name == "placefloat":
+    #     print(f"{stanza_name} sequence is {sequence_elements}")
+
+    stem_seen = False
+    prefix = ""
+    default_stem = ""
+    postfix = ""
+
+    for sequence_element in sequence_elements:
+        # print(f"{stanza_name} sequence tag is {sequence_element.tag}")
+        if sequence_element.tag == "{http://www.pragma-ade.com/commands}string" and stem_seen == False:
+            prefix = sequence_element.get('value')
+        elif sequence_element.tag == "{http://www.pragma-ade.com/commands}instance":
+            default_stem = sequence_element.get('value')
+            stem_seen = True
+        elif sequence_element.tag == "{http://www.pragma-ade.com/commands}string" and stem_seen == True:
+            postfix = sequence_element.get('value')
+
+    instances = stanza.xpath(
+        'cd:instances/cd:constant/@value', namespaces=NSMAP)
+
+    if stanza_type == "environment":
+        # Process each instance as an environment
+        print(
+            f"CLASSENV - For the class {stanza_name}, generating environment")
+        environment_relations = {}
+        environment_relations['stem'] = stanza_name
+        environment_relations['members'] = []
+
+        for instance_name in instances:
+            instance_name = prefix + instance_name + postfix
+            # add_environment(instance_name, stanza,
+            #                 environments_dict, commands_dict, relations_list)
+
+            print(
+                f"CLASSENV - Starting on environment {instance_name} in class {stanza_name}...")
+
+            if 'begin' in stanza.attrib:
+                env_start_string = stanza.attrib['begin']
+            else:
+                env_start_string = "start"
+
+            if 'end' in stanza.attrib:
+                env_stop_string = stanza.attrib['end'].encode(
+                    "ascii", errors="ignore").decode()
+            else:
+                env_stop_string = "stop"
+
+            start_command_name = env_start_string + instance_name
+            stop_command_name = env_stop_string + instance_name
+
+            print(
+                f" ENVIRON - For the environment {stanza_name}, generating {start_command_name}, {stop_command_name}")
+            add_command(start_command_name, stanza, commands_dict)
+            environment_relations['members'].append(start_command_name)
+            add_command(stop_command_name, stanza,
+                        commands_dict, with_arguments=False)
+            environment_relations['members'].append(stop_command_name)
+
+        class_relations['instances'].append(environment_relations)
+
+    else:
+        # Process each instance as a command
+
+        all_instances = []
+
+        for instance_name in instances:
+            instance_name = prefix + instance_name + postfix
+            add_command(instance_name, stanza, commands_dict)
+            all_instances.append(instance_name)
+            class_relations['instances'].append(instance_name)
+
+        sep = ", "
+        all_instances = sep.join(all_instances)
+
+        print(
+            f"   CLASS - For the class {stanza_name}, generated {all_instances}")
+
+    relations_list.append(class_relations)
+    if stanza_name not in classes_list:
+        classes_list.append(stanza_name)
+
+
+def get_stanza_type(stanza):
+
+    # We are looking for one of three types of stanzas, and an escape case:
+    #
+    # CLASSES
+    #
+    # These stanzas describe sets of related commands that share setups. Commands can be added
+    # to the set by the user with an appropraite \define command
+    #
+    # variant="instance" AND instance child AND non-zero instances
+    #
+    # ENVIRONMENTS
+    #
+    # This imply at base a pair of commands, a stem with a prefix for the begining of the environment
+    # and a prefix for the end
+    #
+    # type=environment
+    #
+    # COMMANDS
+    #
+    # Everything else that doesn't have a strange variant attribute (we wan the command manual to
+    # document extant commands the user might encounter, not things that are as yet unimplemented)
+    #
+    # (everything else except unhandled variants)
+    #
+    # UNHANDLED VARIANTS
+    #
+    # ...get reported, but no commands are created?
+
+    # We want the return values from here to be sufficient to disambiguate any collisions
+
+    try:
+        variant_type = stanza.attrib['variant']
+    except:
+        variant_type = False
+
+    try:
+        stanza_type = stanza.attrib['type']
+    except:
+        stanza_type = False
+
+    try:
+        environment_prefix = stanza.attrib['begin']
+    except:
+        environment_prefix = False
+
+    try:
+        stanza_name = stanza.attrib['name']
+    except:
+        logger.debug(
+            f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(stanza)}\n\n")
+        return "ENONAME", "variant", variant_type, environment_prefix
+
+    if stanza_name.encode(
+            "ascii", errors="ignore").decode() == "":
+        # we have no name to work with, bail out
+        logger.debug(
+            f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(stanza)}\n\n")
+        return "EEMPTYNAME", "variant", variant_type, environment_prefix
+
+    has_instances = stanza.xpath(
+        'boolean(cd:instances/cd:constant)', namespaces=NSMAP)
+
+    if variant_type == "instance" and has_instances:
+        return stanza_name, "class", variant_type, environment_prefix
+    elif stanza_type == "environment" and variant_type == False:
+        return stanza_name, "environment", variant_type, environment_prefix
+    elif variant_type == False:
+        return stanza_name, "command", variant_type, environment_prefix
+    else:
+        return stanza_name, "variant", variant_type, environment_prefix
 
 
 def process_interface_tree(ft):
@@ -371,99 +574,144 @@ def process_interface_tree(ft):
     one of commands (style, document, and system) and one of variants.
     """
 
+    # some stanzas appear twice in the interface, and cannot be disambiguated:
+    interface_duplicates = [
+        'thinspace',
+        'monobold',
+        'xmlregisterns',
+        'defineinterlinespace',
+        'setupinterlinespace',
+        'setuplocalinterlinespace',
+        'switchtointerlinespace',
+        'dosetupcheckedinterlinespace',
+        'useinterlinespaceparameter',
+        'definelinefiller',
+        'setuplinefiller',  # Second one has global added, as of 2020-07-05
+        'setuplinefillers',
+        'startlinefiller',
+        'stoplinefiller',
+        'setlinefiller',
+        'starttexcode',
+        'stoptexcode',
+    ]
+
     logger.debug("### Processing interface tree.")
 
+    classes_list = []
     commands_dict = {}
+    environments_list = []
     variants_dict = {}
-    env_related_dict = {}
+    relations_list = []
 
     interface_commands = list_of_commands(ft, NSMAP)
 
     for command_stanza in interface_commands:
-        # First, check if we have a valid name attribute; if that fails, log the offending stanza
-        try:
-            command_name = command_stanza.attrib['name']
-        except:
-            logger.debug(
-                f"ENONAME: No name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
+
+        stanza_name, stanza_type, variant_type, environment_prefix = get_stanza_type(
+            command_stanza)
+
+        # print(
+        #     f"Found command {stanza_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
+
+        if stanza_name in commands_dict and stanza_name in interface_duplicates:
+            print(
+                f"     DUP - Found duplicate stanza for command {stanza_name}")
             continue
 
-        if command_name.encode(
-                "ascii", errors="ignore").decode() == "":
-            # we have no name to work with, bail out
-            logger.debug(
-                f"EEMPTYNAME: Empty name found in the folllowing stanza:\n\n{ppxml(command_stanza)}\n\n")
+        if "start" + stanza_name in commands_dict and "start" + stanza_name in interface_duplicates:
+            print(
+                f"     DUP - Found duplicate environment stanza for command {stanza_name}")
             continue
 
-        try:
-            variant_type = command_stanza.attrib['variant']
-        except:
-            variant_type = False
-
-        try:
-            command_type = command_stanza.attrib['type']
-        except:
-            command_type = False
-
-        if 'begin' in command_stanza.attrib:
-            found_begin = True
-            begin_string = command_stanza.attrib['begin']
+        collision_list = []
+        command_signature = (stanza_name, stanza_type,
+                             variant_type, environment_prefix)
+        if command_signature in collision_list:
+            logger.warn(
+                f"Collision for command {stanza_name} with type {stanza_type} (Variant:{variant_type}) (Env Prefix: {environment_prefix})")
         else:
-            found_begin = False
-            begin_string = ""
+            collision_list.append(command_signature)
 
-        if 'end' in command_stanza.attrib:
-            found_end = True
-            # This terrible nonsense is to handle NBSP in attribute value
-            end_string = command_stanza.attrib['end'].encode(
-                "ascii", errors="ignore").decode()
-        else:
-            found_end = False
-            end_string = ""
-
-        if variant_type:
-            # Handle variants, and instances of variants
-
-            # what the heck is happening with setuppapersize
-            if command_name == "setuppapersize":
-                add_command_to_dict(commands_dict, command_name,
-                                    command_stanza)
-            else:
-                add_command_to_dict(variants_dict, command_name,
-                                    command_stanza)
-        else:
-            # Handle all other commands
-            if found_begin or found_end:
-                # We want to handle all the cases here; we may have begin, end, or both
-                # (but we need to generate both commands in any case)
-                add_command_to_dict(commands_dict, command_name,
-                                    command_stanza, is_begin=True, begin_string=begin_string)
-                add_command_to_dict(commands_dict, command_name,
-                                    command_stanza, is_end=True, end_string=end_string)
-            else:
-                # Simple case of single command
-                add_command_to_dict(
-                    commands_dict, command_name, command_stanza)
-
-        ignored_stems_for_related = ['startstop']
-
-        if command_type == "environment":
-            # Generate start and stop commands
-            add_command_to_dict(commands_dict, command_name,
-                                command_stanza, is_begin=True, begin_string="start")
-            add_command_to_dict(commands_dict, command_name,
-                                command_stanza, is_end=True, end_string="stop")
-            # We keep track of appropriate commands to add to the generated reltable here
-            if command_name not in ignored_stems_for_related:
-                env_related_dict[command_name] = []
+        if stanza_type == "class":
+            add_class(stanza_name, command_stanza, classes_list,
+                      environments_list, commands_dict, relations_list)
+        elif stanza_type == "environment":
+            add_environment(
+                stanza_name, command_stanza, environments_list, commands_dict, relations_list)
+        elif stanza_type == "command":
+            add_command(stanza_name, command_stanza, commands_dict)
+        elif stanza_type == "variant":
+            process_variant(stanza_name, command_stanza)
 
     # Run back through the dict of commands stems, and add to the child list any
     # command that has the environment as a stem of common forms
 
-    env_related_dict = generate_env_related_dict(
-        env_related_dict, commands_dict)
+    # env_related_dict = generate_env_related_dict(
+    #     env_related_dict, commands_dict)
 
-    return commands_dict, variants_dict, env_related_dict
+    return commands_dict, variants_dict, classes_list, environments_list, relations_list
+
+
+def add_supporting_env_commands(relations_list, commands_dict):
+
+    transformation_map = {
+        'definefloats': 'definefloat',
+        'setupfloats': 'setupfloat',
+        'definebox': 'definehbox',
+        'definectxfunction': 'installctxfunction',
+        'definectxfunctiondefinition':  'startctxfunctiondefintion',
+        'definefence': 'definemathfence',
+        'definelabel': 'definelabelclass',
+        'definelanguage': 'installlanguage',
+        'definesynonym': 'definesynonyms',
+        'definesorts': 'definesorting',
+        'definesection': 'definehead',
+        'setupsection': 'setuphead',
+    }
+
+    for relation in relations_list:
+        if 'stem' in relation:
+            setup_command = "setup" + relation['stem']
+            if setup_command in commands_dict:
+                relation['members'].append(setup_command)
+
+            define_command = "define" + relation['stem']
+            if define_command in transformation_map:
+                print(
+                    f"#### Transforming {define_command} to {transformation_map[define_command]}")
+                define_command = transformation_map[define_command]
+            if define_command in commands_dict:
+                relation['members'].append(define_command)
+
+        if 'name' in relation:
+            setup_command = "setup" + relation['name']
+            if setup_command in commands_dict:
+                relation['instances'].append(setup_command)
+
+            define_command = "define" + relation['name']
+            if define_command in transformation_map:
+                print(
+                    f"#### Transforming {define_command} to {transformation_map[define_command]}")
+                define_command = transformation_map[define_command]
+            if define_command in commands_dict:
+                relation['instances'].append(define_command)
+
+            for instance in relation['instances']:
+                if 'stem' in instance:
+                    setup_command = "setup" + instance['stem']
+                    if setup_command in commands_dict:
+                        instance['members'].append(setup_command)
+
+                    define_command = "define" + instance['stem']
+                    if define_command in transformation_map:
+                        print(
+                            f"#### Transforming {define_command} to {transformation_map[define_command]}")
+                        define_command = transformation_map[define_command]
+
+                    if define_command in commands_dict:
+                        instance['members'].append(define_command)
+
+    return relations_list
 
 # --- Topic Building Functions ---
 
@@ -559,7 +807,7 @@ def add_topic_refbody_settings(argument_data):
                     ph_element = etree.Element('ph')
                     ph_element.text = " (Inherits from "
                     xref_element = etree.Element(
-                        'xref', href=f"../{k['donor'][0]}/r_command_{k['donor']}.dita")
+                        'xref', keyref=f"command_{k['donor']}")
                     xref_element.tail = ")"
                     ph_element.append(xref_element)
                     table_head_title_entry.append(ph_element)
@@ -614,18 +862,18 @@ def add_topic_refbody_settings(argument_data):
                     table_row_element = etree.fromstring(
                         inheritance_element_string)
 
-                elif k['type'] == "placeholder":
+                elif k['type'] == "argument":
                     table_row_element = etree.Element('row')
                     keyword_entry_element = etree.Element('entry')
-                    placeholder_name_element = etree.Element(
+                    argument_name_element = etree.Element(
                         'xref', keyref=k['text'], type="reference")
-                    keyword_entry_element.append(placeholder_name_element)
+                    keyword_entry_element.append(argument_name_element)
                     table_row_element.append(keyword_entry_element)
 
                     keyword_desc_element = etree.Element('entry')
-                    placeholder_desc_element = etree.Element(
-                        'ph', conkeyref=f"{k['text']}/placeholder_desc")
-                    keyword_desc_element.append(placeholder_desc_element)
+                    argument_desc_element = etree.Element(
+                        'ph', conkeyref=f"{k['text']}/argument_desc")
+                    keyword_desc_element.append(argument_desc_element)
                     table_row_element.append(keyword_desc_element)
 
                 elif k['type'] == "simple":
@@ -702,8 +950,10 @@ def add_topic_refbody_settings(argument_data):
         settings_table_element[0].attrib['id'] = f"{argument_data['name']}_entry"
 
     for donor in settings_donors:
+        # donor_xref_element = etree.Element(
+        #     'xref', href=f"../../{get_command_url(donor)}")
         donor_xref_element = etree.Element(
-            'xref', href=f"../../{get_command_url(donor)}")
+            'xref', keyref=f"command_{donor}")
         donor_xref_element.tail = "."
         note_element = etree.Element('note')
         note_element.text = "Inherits settings from "
@@ -711,8 +961,10 @@ def add_topic_refbody_settings(argument_data):
         settings_section_element.append(note_element)
 
     for donor in options_donors:
+        # donor_xref_element = etree.Element(
+        #     'xref', href=f"../../{get_command_url(donor)}")
         donor_xref_element = etree.Element(
-            'xref', href=f"../../{get_command_url(donor)}")
+            'xref', keyref=f"command_{donor}")
         donor_xref_element.tail = "."
         note_element = etree.Element('note')
         note_element.text = "Inherits options from "
@@ -779,18 +1031,18 @@ def add_topic_refbody_options(argument_data):
 
             table_row_element = etree.fromstring(inheritance_element_string)
 
-        elif c['type'] == "placeholder":
+        elif c['type'] == "argument":
             table_row_element = etree.Element('row')
             keyword_entry_element = etree.Element('entry')
-            placeholder_name_element = etree.Element(
+            argument_name_element = etree.Element(
                 'xref', keyref=c['text'], type="reference")
-            keyword_entry_element.append(placeholder_name_element)
+            keyword_entry_element.append(argument_name_element)
             table_row_element.append(keyword_entry_element)
 
             keyword_desc_element = etree.Element('entry')
-            placeholder_desc_element = etree.Element(
-                'ph', conkeyref=f"{c['text']}/placeholder_desc")
-            keyword_desc_element.append(placeholder_desc_element)
+            argument_desc_element = etree.Element(
+                'ph', conkeyref=f"{c['text']}/argument_desc")
+            keyword_desc_element.append(argument_desc_element)
             table_row_element.append(keyword_desc_element)
 
         elif c['type'] == "simple":
@@ -820,8 +1072,10 @@ def add_topic_refbody_options(argument_data):
     options_section_element.append(options_table_element)
 
     for donor in options_donors:
+        # donor_xref_element = etree.Element(
+        #     'xref', href=f"../../{get_command_url(donor)}")
         donor_xref_element = etree.Element(
-            'xref', href=f"../../{get_command_url(donor)}")
+            'xref', keyref=f"command_{donor}")
         donor_xref_element.tail = "."
         note_element = etree.Element('note')
         note_element.text = "Inherits options from "
@@ -838,13 +1092,13 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
     desc_entry_element = etree.Element('stentry')
     vals_entry_element = etree.Element('stentry')
 
-    placeholder_name_element = etree.Element(
+    argument_name_element = etree.Element(
         'xref', keyref=this_argument['type'], type="reference")
-    name_entry_element.append(placeholder_name_element)
+    name_entry_element.append(argument_name_element)
 
-    placeholder_desc_element = etree.Element(
-        'ph', conkeyref=f"{this_argument['type']}/placeholder_desc")
-    desc_entry_element.append(placeholder_desc_element)
+    argument_desc_element = etree.Element(
+        'ph', conkeyref=f"{this_argument['type']}/argument_desc")
+    desc_entry_element.append(argument_desc_element)
 
     if this_argument['type'] == "OPTIONS":
         # This is the complicated one; we want to actually include a short list of options here
@@ -863,20 +1117,20 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
                 row_element.append(etree.Element('stentry'))
                 row_element.append(etree.Element('stentry'))
                 return row_element
-            elif c['default'] == True and c['type'] == "placeholder":
-                placeholder_name_element = etree.Element(
+            elif c['default'] == True and c['type'] == "argument":
+                argument_name_element = etree.Element(
                     'xref', keyref=c['text'], type="reference")
                 default_phrase = etree.Element('ph', importance="default")
-                default_phrase.append(placeholder_name_element)
+                default_phrase.append(argument_name_element)
                 vals_entry_element.append(default_phrase)
                 current_element = default_phrase
                 current_element.tail = ", "
                 in_tail = True
-            elif c['type'] == "placeholder":
-                placeholder_name_element = etree.Element(
+            elif c['type'] == "argument":
+                argument_name_element = etree.Element(
                     'xref', keyref=c['text'], type="reference")
-                vals_entry_element.append(placeholder_name_element)
-                current_element = placeholder_name_element
+                vals_entry_element.append(argument_name_element)
+                current_element = argument_name_element
                 current_element.tail = ", "
                 in_tail = True
             elif c['default'] == True:
@@ -918,9 +1172,9 @@ def add_topic_refbody_refsyn_simpletable_row(this_argument):
         vals_entry_element.text = "\\" + this_argument['name']
 
     else:
-        placeholder_vals_element = etree.Element(
-            'ph', conkeyref=f"{this_argument['type']}/placeholder_value")
-        vals_entry_element.append(placeholder_vals_element)
+        argument_vals_element = etree.Element(
+            'ph', conkeyref=f"{this_argument['type']}/argument_value")
+        vals_entry_element.append(argument_vals_element)
 
     row_element.append(name_entry_element)
     row_element.append(desc_entry_element)
@@ -934,7 +1188,7 @@ def add_topic_refbody_refsyn_simpletable(topic_data):
 
     simpletable_header_string = """
                     <sthead>
-          <stentry>Name</stentry>
+          <stentry>Argument</stentry>
           <stentry>Description</stentry>
           <stentry>Values</stentry>
         </sthead>"""
@@ -1147,6 +1401,79 @@ def generate_dita_topic(topic_data):
     return topic
 
 
+def generate_environment_topic(environment_name):
+    topic = etree.Element(
+        'concept', id=f"r_command_{environment_name}")
+
+    attr = topic.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{environment_name}"
+    keyword_element.tail = " Environment"
+
+    title_element = etree.Element('title')
+    title_element.text = "The "
+    title_element.append(keyword_element)
+    topic.append(title_element)
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{environment_name}"
+    keyword_element.tail = " environment..."
+
+    shortdesc_element = etree.Element('shortdesc', rev='0')
+    shortdesc_element.text = "The "
+    shortdesc_element.append(keyword_element)
+    topic.append(shortdesc_element)
+
+    conbody_element_string = """<conbody>
+    <section>
+      <p></p>
+    </section>
+  </conbody>
+    """
+
+    topic.append(etree.fromstring(conbody_element_string))
+
+    return topic
+
+
+def generate_class_topic(class_name):
+    topic = etree.Element('concept', id=f"c_class_{class_name}")
+
+    attr = topic.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{class_name}"
+    keyword_element.tail = " Class"
+
+    title_element = etree.Element('title')
+    title_element.text = "The "
+    title_element.append(keyword_element)
+    topic.append(title_element)
+
+    keyword_element = etree.Element('keyword')
+    keyword_element.text = f"{class_name}"
+    keyword_element.tail = " class..."
+
+    shortdesc_element = etree.Element('shortdesc', rev='0')
+    shortdesc_element.text = "The "
+    shortdesc_element.append(keyword_element)
+    topic.append(shortdesc_element)
+
+    conbody_element_string = """<conbody>
+    <section>
+      <p></p>
+    </section>
+  </conbody>
+    """
+
+    topic.append(etree.fromstring(conbody_element_string))
+
+    return topic
+
+
 # --- Dealing With Output
 
 def make_output_dirs(base_path, lang):
@@ -1162,8 +1489,8 @@ def make_output_dirs(base_path, lang):
 
     focus_path = base_path / lang
 
-    topic_areas = ["commands", "frontmatter", "glossary",
-                   "out", "placeholders", "support", "temp", ]
+    topic_areas = ["commands", "classes", "environments", "frontmatter", "glossary",
+                   "out", "arguments", "support", "temp", ]
 
     for directory in topic_areas:
         topic_area = focus_path / directory
@@ -1178,6 +1505,46 @@ def make_output_dirs(base_path, lang):
 
 def import_manually_edited_topics(met_path, build_path):
     copy_tree(str(met_path), str(build_path), update=1)
+
+
+def write_class_topic(class_topic, name, path):
+
+    filename = path / "classes" / f"c_class_{name}.dita"
+
+    output_bytes = etree.tostring(class_topic,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
+def write_environment_topic(environment_topic, name, path):
+
+    filename = path / "environments" / f"c_environment_{name}.dita"
+
+    output_bytes = etree.tostring(environment_topic,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE concept PUBLIC "-//OASIS//DTD DITA Concept//EN" "concept.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
 
 
 def write_command_topic(topic_element, name, path):
@@ -1235,50 +1602,165 @@ def write_inheritance_ditamap(donor_set, path):
         f.write(output)
 
 
-def write_related_ditamap(related_dict, path):
-    inheritance_map = etree.Element('map')
-    attr = inheritance_map.attrib
+def get_reltable_width(related_list):
+
+    longest_row = 1
+
+    for row in related_list:
+        if 'instances' in row:
+            if len(row['instances']) > longest_row:
+                longest_row = len(row['instances'])
+
+    # We add two here to accomodate a link to the umbrella topic for the class, the environment, or both
+    return longest_row + 2
+
+
+def write_related_ditamap(related_list, path):
+
+    reltable_width = get_reltable_width(related_list)
+    relationship_map = etree.Element('map')
+    attr = relationship_map.attrib
     attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
 
     title_element = etree.Element('title')
-    title_element.text = "Command Inheritance"
+    title_element.text = "Command Relationships"
 
-    inheritance_map.append(etree.Comment(
+    relationship_map.append(etree.Comment(
         "Reltable for related commands: each row with as many cells needed for all of the related commands to that particular command."))
 
     reltable_element = etree.Element('reltable')
 
-    reltable_header_row_string = """<relheader>
-      <relcolspec type="reference"><!--Command--></relcolspec>
-      <relcolspec type="reference"><!--Related--></relcolspec>
-    </relheader>"""
+    relheader_element = etree.Element('relheader')
 
-    reltable_element.append(etree.fromstring(reltable_header_row_string))
+    for i in range(reltable_width):
+        relheader_element.append(etree.Element('relcolspec', type='reference'))
 
-    for command_list in related_dict.values():
-        for command in command_list:
-            sibling_list = command_list.copy()
-            sibling_list.remove(command)
-            #print(command, sibling_list)
-            relrow_element = etree.Element('relrow')
-            single_relcell_element = etree.Element('relcell')
+    reltable_element.append(relheader_element)
+
+    for row in related_list:
+        relrow_element = etree.Element('relrow')
+        # print(row)
+        if 'stem' in row:
+            # print(f"Found environment")
+            relcell_element = etree.Element('relcell')
+            relcell_element.attrib['collection-type'] = "family"
             topicref_element = etree.Element(
-                'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
-            single_relcell_element.append(topicref_element)
-            relrow_element.append(single_relcell_element)
-            multiple_relcell_element = etree.Element('relcell')
-            for command in sibling_list:
+                'topicref', keyref=f"environment_{row['stem']}")
+            relcell_element.append(topicref_element)
+            for member in row['members']:
                 topicref_element = etree.Element(
-                    'topicref', href=f"commands/{command[0].lower()}/r_command_{command}.dita")
-                multiple_relcell_element.append(topicref_element)
-            relrow_element.append(multiple_relcell_element)
-            reltable_element.append(relrow_element)
+                    'topicref', keyref=f"command_{member}")
+                relcell_element.append(topicref_element)
+            relrow_element.append(relcell_element)
+            for i in range(reltable_width - len(relrow_element)):
+                relrow_element.append(etree.Element('relcell'))
 
-    inheritance_map.append(reltable_element)
+        elif 'name' in row:
+            # print(f"Found class")
+            relcell_element = etree.Element('relcell')
+            topicref_element = etree.Element(
+                'topicref', keyref=f"class_{row['name']}")
+            relcell_element.append(topicref_element)
+            relrow_element.append(relcell_element)
+
+            for instance in row['instances']:
+                # Make a relcell
+                relcell_element = etree.Element('relcell')
+                # populate the relcell
+                if type(instance) == str:
+                    relcell_element = etree.Element('relcell')
+                    topicref_element = etree.Element(
+                        'topicref', keyref=f"command_{instance}")
+                    relcell_element.append(topicref_element)
+                elif type(instance) == dict:
+                    relcell_element = etree.Element('relcell')
+                    relcell_element.attrib['collection-type'] = "family"
+                    topicref_element = etree.Element(
+                        'topicref', keyref=f"environment_{instance['stem']}")
+                    relcell_element.append(topicref_element)
+                    for member in instance['members']:
+                        topicref_element = etree.Element(
+                            'topicref', keyref=f"command_{member}")
+                        relcell_element.append(topicref_element)
+                    relrow_element.append(relcell_element)
+                # add relcell to row
+                relrow_element.append(relcell_element)
+
+            # pad row with empty cells
+            for i in range(reltable_width - len(relrow_element)):
+                relrow_element.append(etree.Element('relcell'))
+
+        reltable_element.append(relrow_element)
+
+    relationship_map.append(reltable_element)
 
     filename = path / "relations.ditamap"
 
-    output_bytes = etree.tostring(inheritance_map,
+    output_bytes = etree.tostring(relationship_map,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
+def write_environments_ditamap(environments_list, path):
+    environments_map = etree.Element('map')
+    attr = environments_map.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    title_element = etree.Element('title')
+    title_element.text = "Environments"
+    environments_map.append(title_element)
+
+    for environment in sorted(environments_list):
+        topicref_element = etree.Element(
+            'topicref', keys=f"environment_{environment}", href=f"environments/c_environment_{environment}.dita")
+        environments_map.append(topicref_element)
+
+    filename = path / "environments.ditamap"
+
+    output_bytes = etree.tostring(environments_map,
+                                  pretty_print=True,
+                                  xml_declaration=True,
+                                  encoding='UTF-8',
+                                  doctype='''<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "map.dtd">''')
+
+    output = output_bytes.decode("utf-8")
+
+    output = output.replace(
+        'xmlns:ns0="http://www/w3/org/XML/1998/namespace" ', '')
+    output = output.replace('ns0:lang="en"', 'xml:lang="en"')
+
+    with open(filename, 'w') as f:
+        f.write(output)
+
+
+def write_classes_ditamap(classes_list, path):
+    classes_map = etree.Element('map')
+    attr = classes_map.attrib
+    attr['{http://www/w3/org/XML/1998/namespace}lang'] = "en"
+
+    title_element = etree.Element('title')
+    title_element.text = "Classes"
+    classes_map.append(title_element)
+
+    for cmd_class in sorted(classes_list):
+        topicref_element = etree.Element(
+            'topicref', keys=f"class_{cmd_class}", href=f"classes/c_class_{cmd_class}.dita")
+        classes_map.append(topicref_element)
+
+    filename = path / "classes.ditamap"
+
+    output_bytes = etree.tostring(classes_map,
                                   pretty_print=True,
                                   xml_declaration=True,
                                   encoding='UTF-8',
@@ -1304,9 +1786,9 @@ def write_command_ditamap(command_list, path, map_filename, map_title):
     command_map.append(title_element)
 
     for command in sorted(command_list):
-        keydef_element = etree.Element(
+        topicref_element = etree.Element(
             'topicref', keys=f"command_{command}", href=f"commands/{command[0]}/r_command_{command}.dita")
-        command_map.append(keydef_element)
+        command_map.append(topicref_element)
 
     filename = path / map_filename
 
@@ -1333,6 +1815,7 @@ if __name__ == "__main__":
     parser.add_argument("--lang", type=str, default="en")
     parser.add_argument("--name", type=str)
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--test", action="store_true")
     args = vars(parser.parse_args())
 
     input_file = args['input']
@@ -1347,13 +1830,10 @@ if __name__ == "__main__":
 
     print("Processing interface file.")
 
-    commands_dict, variants_dict, related_dict = process_interface_tree(
+    commands_dict, variants_dict, classes_list, environments_list, relations_list = process_interface_tree(
         full_tree)
 
-    # TODO remove after debugging
-    # print("## reltable Data Structure")
-    # pp = pprint.PrettyPrinter(indent=2)
-    # pp.pprint(related_dict)
+    relations_dict = add_supporting_env_commands(relations_list, commands_dict)
 
     if args['all']:
 
@@ -1379,6 +1859,8 @@ if __name__ == "__main__":
 
         print("Writing topic files.")
 
+        print("Writing command topics.")
+
         for num, (command_name, command_data) in enumerate(commands_dict.items()):
             logger.info(f"{num:04}: Processing {command_data['name']}...")
 
@@ -1394,11 +1876,21 @@ if __name__ == "__main__":
 
             write_command_topic(xml_topic, command_name, focus_path)
 
+        print("Writing class topics.")
+        for cmd_class in classes_list:
+            write_class_topic(generate_class_topic(
+                cmd_class), cmd_class, focus_path)
+
+        print("Writing environment topics.")
+        for environment in environments_list:
+            write_environment_topic(generate_environment_topic(
+                environment), environment, focus_path)
+
         print("Writing maps.")
 
         write_inheritance_ditamap(donor_set, focus_path)
 
-        write_related_ditamap(related_dict, focus_path)
+        write_related_ditamap(relations_list, focus_path)
 
         # Ditamap files for DITA processors
         write_command_ditamap(full_topics_list, focus_path,
@@ -1408,13 +1900,17 @@ if __name__ == "__main__":
         write_command_ditamap(system_topics_list, focus_path,
                               "system_commands.ditamap", "System Commands")
 
-        # XML files for ConTeXt setups
+        # # XML files for ConTeXt setups
         write_command_ditamap(full_topics_list, focus_path,
                               "full_commands.xml", "Full Commands")
         write_command_ditamap(user_topics_list, focus_path,
                               "user_commands.xml", "User Commands")
         write_command_ditamap(system_topics_list, focus_path,
                               "system_commands.xml", "System Commands")
+
+        write_classes_ditamap(classes_list, focus_path)
+
+        write_environments_ditamap(environments_list, focus_path)
 
         print("Importing manually edited topics.")
 
@@ -1446,6 +1942,18 @@ if __name__ == "__main__":
         else:
             print(f"Command name {commands_dict[req_name]} unknown!")
 
+    elif args['test']:
+        print("Data generated.")
+
+        # TODO remove after debugging
+        # print("## classes Data Structure")
+        # pp = pprint.PrettyPrinter(indent=2)
+        # pp.pprint(classes_list)
+
+        # TODO remove after debugging
+        print("## Relations Data Structure")
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint(relations_list)
     else:
         print("No action taken")
 
